@@ -40,7 +40,7 @@ const tools = Object.values(toolsByName);
 
 export const model = new ChatOpenAI({
     configuration: {
-       baseURL: "http://192.168.0.36:1234/v1",
+        baseURL: "http://192.168.0.36:1234/v1",
     },
     apiKey: 'asdasdas',
     temperature: 0.7,
@@ -175,7 +175,7 @@ const shouldCallLLM: ConditionalEdgeRouter<typeof BattleshipState, any> = (state
     }
 }
 
-const agent = new StateGraph(BattleshipState)
+export const newAgent = () => new StateGraph(BattleshipState)
     .addNode("llmCall", llmCall)
     .addNode("toolNode", toolNode)
     .addEdge(START, "llmCall")
@@ -184,12 +184,12 @@ const agent = new StateGraph(BattleshipState)
     .compile({ checkpointer: new MemorySaver() });
 
 
-(async () => {
+export const runStream = async (agent: any, id: string) => {
     let thinking = ''
     let totalTokens = 0
 
     for await (const [mode, chunk] of await agent.withConfig({
-        configurable: { thread_id: "123" }
+        configurable: { thread_id: id }
     }).stream(
         {},
         { streamMode: ["messages", "updates", "values", "custom"] },
@@ -214,4 +214,4 @@ const agent = new StateGraph(BattleshipState)
             thinking = ''
         }
     }
-})()
+}
