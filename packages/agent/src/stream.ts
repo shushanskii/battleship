@@ -43,8 +43,8 @@ export const runStream = async (
 
         if (mode === "values") {
             console.log(thinking)
-            console.log('totalTokens', totalTokens)
-            thinking = ''
+            sendMessage(id, "thinking", thinking)
+            sendMessage(id, "tokens", totalTokens)
         }
     }
 }
