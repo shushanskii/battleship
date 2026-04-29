@@ -12,11 +12,14 @@ import {
     END,
     interrupt,
     MemorySaver,
+    Command,
+    INTERRUPT,
 } from "@langchain/langgraph";
 import { AIMessage, ToolMessage } from "@langchain/core/messages";
 import * as z from "zod";
-import { Ship, ShipDirection } from "./ship";
-import { Board } from "./board";
+import { Ship, ShipDirection, initShip, shipCoords } from "./ship";
+import { Board, initBoard, boardPlace, boardCanPlace, boardPrint } from "./board";
+import { sendMessage } from ".";
 
 const place = tool(
     ({ origin, direction }) => {
@@ -49,7 +52,7 @@ export const model = new ChatOpenAI({
 
 const BattleshipState = new StateSchema({
     board: new ReducedValue(
-        z.custom<Board>().default(new Board()),
+        z.custom<Board>().default(initBoard()),
         { reducer: (_, next) => next }
     ),
     ships: new ReducedValue(
@@ -71,7 +74,9 @@ const BattleshipState = new StateSchema({
 });
 
 const llmCall: GraphNode<typeof BattleshipState> = async (state) => {
-    console.log(state.board.print(state.ships))
+    const board = initBoard();
+    for (const ship of state.ships) boardPlace(board, ship);
+    console.log(boardPrint(board, state.ships))
 
     const response = await model.invoke([
         new SystemMessage(
@@ -109,14 +114,13 @@ You will receive:
         ),
         new HumanMessage(`
 Current battleground:
-${state.board.print(state.ships)}
+${boardPrint(board, state.ships)}
 
 Place a ship of size ${state.unplacedShips[0]}. You MUST call the "place" tool.
         `),
     ]);
     return {
         messages: [response],
-        llmCalls: 1,
     };
 };
 
@@ -131,10 +135,11 @@ const toolNode: GraphNode<typeof BattleshipState> = async (state) => {
     if (!toolCall) return { messages: [] }
 
     const { origin, direction } = toolCall.args as { origin: string; direction: ShipDirection }
-    const ship = new Ship(origin, direction, state.unplacedShips[0])
+    const ship = initShip(origin, direction, state.unplacedShips[0])
 
-    const board = state.board.clone()
-    board.place(ship)
+    const board = initBoard();
+    for (const s of state.ships) boardPlace(board, s);
+    boardPlace(board, ship)
 
     return {
         board,
@@ -151,15 +156,16 @@ const shouldPlace: ConditionalEdgeRouter<typeof BattleshipState, any> = (state) 
 
     const toolCall = lastMessage.tool_calls?.[0]
     if (!toolCall) {
-        console.log()
-        const approved = interrupt("no toolCall in llm response, call llm");
         return "llmCall"
     }
 
     const { origin, direction } = toolCall.args as { origin: string; direction: ShipDirection }
-    const ship = new Ship(origin, direction, state.unplacedShips[0])
+    const ship = initShip(origin, direction, state.unplacedShips[0])
 
-    if (state.board.canPlace(ship)) {
+    const board = initBoard();
+    for (const s of state.ships) boardPlace(board, s);
+
+    if (boardCanPlace(board, ship)) {
         return "toolNode"
     } else {
         return "llmCall"
@@ -170,15 +176,33 @@ const shouldCallLLM: ConditionalEdgeRouter<typeof BattleshipState, any> = (state
     if (state.unplacedShips.length > 0) {
         return "llmCall"
     } else {
-        console.log(state.board.print(state.ships))
+        const board = initBoard();
+        for (const ship of state.ships) boardPlace(board, ship);
+        console.log(boardPrint(board, state.ships))
         return END
     }
 }
 
+const approvalNode = async () => {
+    // Pause execution; payload surfaces in result.__interrupt__
+    const isApproved = interrupt("Do you want to proceed?");
+
+    // Route based on the response
+    if (isApproved) {
+        return new Command({ goto: "llmCall" }); // Runs after the resume payload is provided
+    } else {
+        return new Command({ goto: END });
+    }
+
+    return new Command({ goto: "llmCall" })
+}
+
 export const newAgent = () => new StateGraph(BattleshipState)
+    .addNode("approvalNode", approvalNode)
     .addNode("llmCall", llmCall)
     .addNode("toolNode", toolNode)
-    .addEdge(START, "llmCall")
+    .addEdge(START, "approvalNode")
+    .addEdge("approvalNode", "llmCall")
     .addConditionalEdges("llmCall", shouldPlace, ["toolNode", "llmCall", END])
     .addConditionalEdges("toolNode", shouldCallLLM, ["llmCall", END])
     .compile({ checkpointer: new MemorySaver() });
@@ -188,14 +212,19 @@ export const runStream = async (agent: any, id: string) => {
     let thinking = ''
     let totalTokens = 0
 
+    console.log('runstream', id)
+
     for await (const [mode, chunk] of await agent.withConfig({
         configurable: { thread_id: id }
     }).stream(
         {},
         { streamMode: ["messages", "updates", "values", "custom"] },
     )) {
+        console.log(chunk)
         if (mode === "messages") {
             const [message, metadata] = chunk;
+
+            
 
             //@ts-ignore
             if (message.response_metadata.usage.total_tokens) {
@@ -205,6 +234,17 @@ export const runStream = async (agent: any, id: string) => {
 
             if (message.additional_kwargs.reasoning_content) {
                 thinking += message.additional_kwargs.reasoning_content;
+            }
+        }
+
+        if (mode === "updates") {
+
+            if (chunk[INTERRUPT]) {
+                for (const i of chunk[INTERRUPT]) {
+                    if (i.id != null) {
+                        sendMessage(id, "question", i.value)
+                    }
+                }
             }
         }
 

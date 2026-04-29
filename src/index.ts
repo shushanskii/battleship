@@ -1,6 +1,7 @@
 import express from 'express';
 import { WebSocketServer, WebSocket } from "ws";
 import { newAgent, runStream } from './agent';
+import { Command } from '@langchain/langgraph';
 
 
 const app = express();
@@ -51,7 +52,17 @@ export const setupWebSocket = () => {
     ws.on('message', (raw: Buffer) => {
       try {
         const { type, payload } = JSON.parse(raw.toString());
-        console.log(`[${id}] type=${type}`, payload);
+        console.log(`[${id}] type=${type}`, payload, id);
+        switch(type) {
+          case "answer":
+            if(payload === "yes") {
+              agent.invoke(new Command({ resume: true }), { configurable: { thread_id: id } })
+            }
+            if(payload === "no") {
+              agent.invoke(new Command({ resume: false }), { configurable: { thread_id: id } })
+            }
+            break;
+        }
       } catch (e) {
         console.error(`[${id}] invalid message:`, raw.toString());
       }
