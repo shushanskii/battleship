@@ -52,16 +52,8 @@ export const setupWebSocket = () => {
     ws.on('message', (raw: Buffer) => {
       try {
         const { type, payload } = JSON.parse(raw.toString());
-        console.log(`[${id}] type=${type}`, payload, id);
-        switch(type) {
-          case "answer":
-            if(payload === "yes") {
-              agent.invoke(new Command({ resume: true }), { configurable: { thread_id: id } })
-            }
-            if(payload === "no") {
-              agent.invoke(new Command({ resume: false }), { configurable: { thread_id: id } })
-            }
-            break;
+        if (type === 'answer') {
+          runStream(agent, id, new Command({ resume: payload }));
         }
       } catch (e) {
         console.error(`[${id}] invalid message:`, raw.toString());

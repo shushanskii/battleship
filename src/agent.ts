@@ -208,23 +208,18 @@ export const newAgent = () => new StateGraph(BattleshipState)
     .compile({ checkpointer: new MemorySaver() });
 
 
-export const runStream = async (agent: any, id: string) => {
+export const runStream = async (agent: any, id: string, input: any = {}) => {
     let thinking = ''
     let totalTokens = 0
-
-    console.log('runstream', id)
 
     for await (const [mode, chunk] of await agent.withConfig({
         configurable: { thread_id: id }
     }).stream(
-        {},
+        input,
         { streamMode: ["messages", "updates", "values", "custom"] },
     )) {
-        console.log(chunk)
         if (mode === "messages") {
             const [message, metadata] = chunk;
-
-            
 
             //@ts-ignore
             if (message.response_metadata.usage.total_tokens) {
