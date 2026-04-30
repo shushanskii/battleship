@@ -29,10 +29,7 @@ import {
 import { initShip, type Ship, ShipDirection } from "./ship";
 
 const place = tool(
-    ({ origin, direction }) => {
-        console.log(`Placing ship at ${origin} facing ${direction}`);
-        return { origin, direction };
-    },
+    ({ origin, direction }) => ({ origin, direction }),
     {
         name: "place",
         description: "Place the current ship on the battleground",
@@ -85,7 +82,6 @@ const llmCall: GraphNode<typeof BattleshipState> = async (state) => {
     for (const ship of state.ships) {
         boardPlace(board, ship);
     }
-    console.log(boardPrint(board, state.ships));
 
     const response = await model.invoke([
         new SystemMessage(
@@ -201,11 +197,6 @@ const shouldCallLLM: ConditionalEdgeRouter<typeof BattleshipState, any> = (
     if (state.unplacedShips.length > 0) {
         return "llmCall";
     } else {
-        const board = initBoard();
-        for (const ship of state.ships) {
-            boardPlace(board, ship);
-        }
-        console.log(boardPrint(board, state.ships));
         return END;
     }
 };

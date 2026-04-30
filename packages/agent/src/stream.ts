@@ -8,9 +8,6 @@ export const runStream = async (
     input: any = {},
     sendMessage: SendMessage,
 ) => {
-    let thinking = "";
-    let totalTokens = 0;
-
     for await (const [mode, chunk] of await agent
         .withConfig({
             configurable: { thread_id: id },
@@ -22,12 +19,12 @@ export const runStream = async (
             const [message] = chunk;
 
             if (message.response_metadata?.usage?.total_tokens) {
-                totalTokens += message.response_metadata.usage.total_tokens;
+                sendMessage(id, "tokens", message.response_metadata.usage.total_tokens);
             }
 
-            if (message.additional_kwargs?.reasoning_content) {
-                thinking += message.additional_kwargs.reasoning_content;
-            }
+            // if (message.additional_kwargs?.reasoning_content) {
+            //     thinking += message.additional_kwargs.reasoning_content;
+            // }
         }
 
         if (mode === "updates") {
@@ -41,8 +38,7 @@ export const runStream = async (
         }
 
         if (mode === "values") {
-            sendMessage(id, "thinking", thinking);
-            sendMessage(id, "tokens", totalTokens);
+            sendMessage(id, "board", chunk.board);
         }
     }
 };
