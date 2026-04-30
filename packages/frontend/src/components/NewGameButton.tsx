@@ -1,6 +1,6 @@
-import { useDispatch } from 'react-redux';
-import styled from 'styled-components';
-import { startNewGame } from '../store/game/slice';
+import { useDispatch } from "react-redux";
+import styled from "styled-components";
+import { startNewGame } from "../store/game/slice";
 
 const Button = styled.button`
   padding: 12px 32px;
@@ -13,6 +13,6 @@ const Button = styled.button`
 `;
 
 export const NewGameButton = () => {
-  const dispatch = useDispatch();
-  return <Button onClick={() => dispatch(startNewGame())}>New Game</Button>;
+    const dispatch = useDispatch();
+    return <Button onClick={() => dispatch(startNewGame())}>New Game</Button>;
 };

@@ -1,37 +1,52 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { tool } from "@langchain/core/tools";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import {
-    StateGraph,
-    StateSchema,
-    MessagesValue,
-    ReducedValue,
-    GraphNode,
-    ConditionalEdgeRouter,
-    START,
+    AIMessage,
+    HumanMessage,
+    SystemMessage,
+} from "@langchain/core/messages";
+import { tool } from "@langchain/core/tools";
+import {
+    Command,
+    type ConditionalEdgeRouter,
     END,
+    type GraphNode,
     interrupt,
     MemorySaver,
-    Command,
+    MessagesValue,
+    ReducedValue,
+    START,
+    StateGraph,
+    StateSchema,
 } from "@langchain/langgraph";
-import { AIMessage, ToolMessage } from "@langchain/core/messages";
+import { ChatOpenAI } from "@langchain/openai";
 import * as z from "zod";
-import { Ship, ShipDirection, initShip, shipCoords } from "./ship";
-import { Board, initBoard, boardPlace, boardCanPlace, boardPrint } from "./board";
+import {
+    type Board,
+    boardCanPlace,
+    boardPlace,
+    boardPrint,
+    initBoard,
+} from "./board";
+import { initShip, type Ship, ShipDirection } from "./ship";
 
 const place = tool(
     ({ origin, direction }) => {
-        console.log(`Placing ship at ${origin} facing ${direction}`)
-        return { origin, direction }
+        console.log(`Placing ship at ${origin} facing ${direction}`);
+        return { origin, direction };
     },
     {
         name: "place",
         description: "Place the current ship on the battleground",
         schema: z.object({
-            origin: z.string().describe("First deck coordinate (leftmost if horizontal, topmost if vertical)"),
-            direction: z.enum([ShipDirection.HORIZONTAL, ShipDirection.VERTICAL]).describe("Ship orientation"),
+            origin: z
+                .string()
+                .describe(
+                    "First deck coordinate (leftmost if horizontal, topmost if vertical)",
+                ),
+            direction: z
+                .enum([ShipDirection.HORIZONTAL, ShipDirection.VERTICAL])
+                .describe("Ship orientation"),
         }),
-    }
+    },
 );
 
 const toolsByName = {
@@ -43,38 +58,34 @@ export const model = new ChatOpenAI({
     configuration: {
         baseURL: "http://192.168.0.36:1234/v1",
     },
-    apiKey: 'asdasdas',
+    apiKey: "asdasdas",
     temperature: 0.7,
-}).bindTools(tools)
-
+}).bindTools(tools);
 
 const BattleshipState = new StateSchema({
-    board: new ReducedValue(
-        z.custom<Board>().default(initBoard()),
-        { reducer: (_, next) => next }
-    ),
-    ships: new ReducedValue(
-        z.custom<Ship[]>().default([]),
-        {
-            inputSchema: z.custom<Ship>(),
-            reducer: (current: Ship[], placed: Ship) => [...current, placed]
-        }
-    ),
+    board: new ReducedValue(z.custom<Board>().default(initBoard()), {
+        reducer: (_, next) => next,
+    }),
+    ships: new ReducedValue(z.custom<Ship[]>().default([]), {
+        inputSchema: z.custom<Ship>(),
+        reducer: (current: Ship[], placed: Ship) => [...current, placed],
+    }),
     unplacedShips: new ReducedValue(
         z.array(z.number()).default([4, 3, 3, 2, 2, 2, 1, 1, 1, 1]),
-        { reducer: (current: number[]) => current.slice(1) }
+        { reducer: (current: number[]) => current.slice(1) },
     ),
     messages: MessagesValue,
-    llmCalls: new ReducedValue(
-        z.number().default(0),
-        { reducer: (x, y) => x + y }
-    ),
+    llmCalls: new ReducedValue(z.number().default(0), {
+        reducer: (x, y) => x + y,
+    }),
 });
 
 const llmCall: GraphNode<typeof BattleshipState> = async (state) => {
     const board = initBoard();
-    for (const ship of state.ships) boardPlace(board, ship);
-    console.log(boardPrint(board, state.ships))
+    for (const ship of state.ships) {
+        boardPlace(board, ship);
+    }
+    console.log(boardPrint(board, state.ships));
 
     const response = await model.invoke([
         new SystemMessage(
@@ -108,7 +119,7 @@ You will receive:
 - Spread ships evenly across the grid.
 - Alternate between horizontal and vertical directions.
 - Avoid clustering ships in one area — it makes you easier to defeat.
-        `
+        `,
         ),
         new HumanMessage(`
 Current battleground:
@@ -123,63 +134,81 @@ Place a ship of size ${state.unplacedShips[0]}. You MUST call the "place" tool.
 };
 
 const toolNode: GraphNode<typeof BattleshipState> = async (state) => {
-    const lastMessage = state.messages[state.messages.length - 1]
+    const lastMessage = state.messages[state.messages.length - 1];
 
     if (!AIMessage.isInstance(lastMessage)) {
-        return { messages: [] }
+        return { messages: [] };
     }
 
-    const toolCall = lastMessage.tool_calls?.[0]
-    if (!toolCall) return { messages: [] }
+    const toolCall = lastMessage.tool_calls?.[0];
+    if (!toolCall) {
+        return { messages: [] };
+    }
 
-    const { origin, direction } = toolCall.args as { origin: string; direction: ShipDirection }
-    const ship = initShip(origin, direction, state.unplacedShips[0])
+    const { origin, direction } = toolCall.args as {
+        origin: string;
+        direction: ShipDirection;
+    };
+    const ship = initShip(origin, direction, state.unplacedShips[0]);
 
     const board = initBoard();
-    for (const s of state.ships) boardPlace(board, s);
-    boardPlace(board, ship)
+    for (const s of state.ships) {
+        boardPlace(board, s);
+    }
+    boardPlace(board, ship);
 
     return {
         board,
         ships: ship,
         unplacedShips: [],
+    };
+};
+
+const shouldPlace: ConditionalEdgeRouter<typeof BattleshipState, any> = (
+    state,
+) => {
+    const lastMessage = state.messages[state.messages.length - 1];
+    if (!AIMessage.isInstance(lastMessage)) {
+        return END;
+    }
+
+    const toolCall = lastMessage.tool_calls?.[0];
+    if (!toolCall) {
+        return "llmCall";
+    }
+
+    const { origin, direction } = toolCall.args as {
+        origin: string;
+        direction: ShipDirection;
+    };
+    const ship = initShip(origin, direction, state.unplacedShips[0]);
+
+    const board = initBoard();
+    for (const s of state.ships) {
+        boardPlace(board, s);
+    }
+
+    if (boardCanPlace(board, ship)) {
+        return "toolNode";
+    } else {
+        return "llmCall";
     }
 };
 
-const shouldPlace: ConditionalEdgeRouter<typeof BattleshipState, any> = (state) => {
-    const lastMessage = state.messages[state.messages.length - 1]
-    if (!AIMessage.isInstance(lastMessage)) {
-        return END
-    }
-
-    const toolCall = lastMessage.tool_calls?.[0]
-    if (!toolCall) {
-        return "llmCall"
-    }
-
-    const { origin, direction } = toolCall.args as { origin: string; direction: ShipDirection }
-    const ship = initShip(origin, direction, state.unplacedShips[0])
-
-    const board = initBoard();
-    for (const s of state.ships) boardPlace(board, s);
-
-    if (boardCanPlace(board, ship)) {
-        return "toolNode"
-    } else {
-        return "llmCall"
-    }
-}
-
-const shouldCallLLM: ConditionalEdgeRouter<typeof BattleshipState, any> = (state) => {
+const shouldCallLLM: ConditionalEdgeRouter<typeof BattleshipState, any> = (
+    state,
+) => {
     if (state.unplacedShips.length > 0) {
-        return "llmCall"
+        return "llmCall";
     } else {
         const board = initBoard();
-        for (const ship of state.ships) boardPlace(board, ship);
-        console.log(boardPrint(board, state.ships))
-        return END
+        for (const ship of state.ships) {
+            boardPlace(board, ship);
+        }
+        console.log(boardPrint(board, state.ships));
+        return END;
     }
-}
+};
 
 const approvalNode = async () => {
     // Pause execution; payload surfaces in result.__interrupt__
@@ -191,18 +220,19 @@ const approvalNode = async () => {
     } else {
         return new Command({ goto: END });
     }
+};
 
-    return new Command({ goto: "llmCall" })
-}
-
-export const newAgent = () => new StateGraph(BattleshipState)
-    .addNode("approvalNode", approvalNode)
-    .addNode("llmCall", llmCall)
-    .addNode("toolNode", toolNode)
-    .addEdge(START, "approvalNode")
-    .addEdge("approvalNode", "llmCall")
-    .addConditionalEdges("llmCall", shouldPlace, ["toolNode", "llmCall", END])
-    .addConditionalEdges("toolNode", shouldCallLLM, ["llmCall", END])
-    .compile({ checkpointer: new MemorySaver() });
-
-
+export const newAgent = () =>
+    new StateGraph(BattleshipState)
+        .addNode("approvalNode", approvalNode)
+        .addNode("llmCall", llmCall)
+        .addNode("toolNode", toolNode)
+        .addEdge(START, "approvalNode")
+        .addEdge("approvalNode", "llmCall")
+        .addConditionalEdges("llmCall", shouldPlace, [
+            "toolNode",
+            "llmCall",
+            END,
+        ])
+        .addConditionalEdges("toolNode", shouldCallLLM, ["llmCall", END])
+        .compile({ checkpointer: new MemorySaver() });

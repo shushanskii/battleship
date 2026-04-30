@@ -1,14 +1,16 @@
-import { WebSocketServer, WebSocket } from "ws";
 import { Command } from "@langchain/langgraph";
+import { type WebSocket, WebSocketServer } from "ws";
 import { runStream } from "./stream";
 
-const wss = new WebSocketServer({ host: '0.0.0.0', port: 3002 });
+const wss = new WebSocketServer({ host: "0.0.0.0", port: 3002 });
 
 const connections = new Map<string, WebSocket>();
 
 export const sendMessage = (id: string, type: string, message: unknown) => {
     const ws = connections.get(id);
-    if (!ws || ws.readyState !== 1) return;
+    if (!ws || ws.readyState !== 1) {
+        return;
+    }
 
     ws.send(JSON.stringify({ type, payload: message }));
 };
@@ -33,13 +35,18 @@ export const setupWebSocket = (sessions: Map<string, any>) => {
 
         runStream(agent, id, {}, sendMessage);
 
-        ws.on('message', (raw: Buffer) => {
+        ws.on("message", (raw: Buffer) => {
             try {
                 const { type, payload } = JSON.parse(raw.toString());
-                if (type === 'answer') {
-                    runStream(agent, id, new Command({ resume: payload }), sendMessage);
+                if (type === "answer") {
+                    runStream(
+                        agent,
+                        id,
+                        new Command({ resume: payload }),
+                        sendMessage,
+                    );
                 }
-            } catch (e) {
+            } catch (_e) {
                 console.error(`[${id}] invalid message:`, raw.toString());
             }
         });

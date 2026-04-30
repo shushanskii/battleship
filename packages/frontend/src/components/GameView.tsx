@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import styled from 'styled-components';
-import { RootState } from '../store';
-import { sendAnswer } from '../store/game/slice';
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import styled from "styled-components";
+import type { RootState } from "../store";
+import { sendAnswer } from "../store/game/slice";
 
 const Container = styled.div`
   display: flex;
@@ -58,34 +58,39 @@ const SendButton = styled.button`
 `;
 
 export const GameView = () => {
-  const [text, setText] = useState('');
-  const dispatch = useDispatch();
-  const messages = useSelector((state: RootState) => state.game.messages);
+    const [text, setText] = useState("");
+    const dispatch = useDispatch();
+    const messages = useSelector((state: RootState) => state.game.messages);
 
-  const handleSend = () => {
-    if (!text.trim()) return;
-    dispatch(sendAnswer(text.trim()));
-    setText('');
-  };
+    const handleSend = () => {
+        if (!text.trim()) {
+            return;
+        }
+        dispatch(sendAnswer(text.trim()));
+        setText("");
+    };
 
-  return (
-    <Container>
-      <MessageList>
-        {Object.entries(messages).map(([id, msg]) => (
-          <Message key={id}>
-            <strong>{msg.type}</strong>: {typeof msg.payload === 'string' ? msg.payload : JSON.stringify(msg.payload)}
-          </Message>
-        ))}
-      </MessageList>
-      <InputRow>
-        <Input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          placeholder="Type your answer..."
-        />
-        <SendButton onClick={handleSend}>Send</SendButton>
-      </InputRow>
-    </Container>
-  );
+    return (
+        <Container>
+            <MessageList>
+                {Object.entries(messages).map(([id, msg]) => (
+                    <Message key={id}>
+                        <strong>{msg.type}</strong>:{" "}
+                        {typeof msg.payload === "string"
+                            ? msg.payload
+                            : JSON.stringify(msg.payload)}
+                    </Message>
+                ))}
+            </MessageList>
+            <InputRow>
+                <Input
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                    placeholder="Type your answer..."
+                />
+                <SendButton onClick={handleSend}>Send</SendButton>
+            </InputRow>
+        </Container>
+    );
 };

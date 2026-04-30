@@ -8,22 +8,21 @@ export const runStream = async (
     input: any = {},
     sendMessage: SendMessage,
 ) => {
-    let thinking = ''
-    let totalTokens = 0
+    let thinking = "";
+    let totalTokens = 0;
 
-    for await (const [mode, chunk] of await agent.withConfig({
-        configurable: { thread_id: id }
-    }).stream(
-        input,
-        { streamMode: ["messages", "updates", "values", "custom"] },
-    )) {
+    for await (const [mode, chunk] of await agent
+        .withConfig({
+            configurable: { thread_id: id },
+        })
+        .stream(input, {
+            streamMode: ["messages", "updates", "values", "custom"],
+        })) {
         if (mode === "messages") {
             const [message] = chunk;
 
-            //@ts-ignore
             if (message.response_metadata?.usage?.total_tokens) {
-                //@ts-ignore
-                totalTokens += message.response_metadata.usage.total_tokens
+                totalTokens += message.response_metadata.usage.total_tokens;
             }
 
             if (message.additional_kwargs?.reasoning_content) {
@@ -35,16 +34,15 @@ export const runStream = async (
             if (chunk[INTERRUPT]) {
                 for (const i of chunk[INTERRUPT]) {
                     if (i.id != null) {
-                        sendMessage(id, "question", i.value)
+                        sendMessage(id, "question", i.value);
                     }
                 }
             }
         }
 
         if (mode === "values") {
-            console.log(thinking)
-            sendMessage(id, "thinking", thinking)
-            sendMessage(id, "tokens", totalTokens)
+            sendMessage(id, "thinking", thinking);
+            sendMessage(id, "tokens", totalTokens);
         }
     }
-}
+};

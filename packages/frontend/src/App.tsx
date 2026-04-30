@@ -1,8 +1,8 @@
-import { useSelector } from 'react-redux';
-import styled from 'styled-components';
-import { RootState } from './store';
-import { NewGameButton } from './components/NewGameButton';
-import { GameView } from './components/GameView';
+import { useSelector } from "react-redux";
+import styled from "styled-components";
+import { GameView } from "./components/GameView";
+import { NewGameButton } from "./components/NewGameButton";
+import type { RootState } from "./store";
 
 const Center = styled.div`
   display: flex;
@@ -12,6 +12,12 @@ const Center = styled.div`
 `;
 
 export const App = () => {
-  const sessionId = useSelector((state: RootState) => state.game.sessionId);
-  return sessionId ? <GameView /> : <Center><NewGameButton /></Center>;
+    const sessionId = useSelector((state: RootState) => state.game.sessionId);
+    return sessionId ? (
+        <GameView />
+    ) : (
+        <Center>
+            <NewGameButton />
+        </Center>
+    );
 };

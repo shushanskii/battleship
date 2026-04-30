@@ -7,6 +7,11 @@
   ],
   "scripts": {
     "agent": "npm start --workspace=packages/agent",
-    "frontend": "npm run dev --workspace=packages/frontend"
+    "frontend": "npm run dev --workspace=packages/frontend",
+    "format": "biome format --write packages/*/src",
+    "lint": "biome check packages/*/src"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.13"
   }
 }
