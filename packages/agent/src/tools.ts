@@ -13,10 +13,11 @@ export const defineStrategy = tool(
   },
 )
 
-export const place = tool(({ origin, direction, description }) => ({ origin, direction }), {
+export const place = tool(({ origin, direction, size }) => ({ origin, direction, size }), {
   name: "place",
-  description: "Place the current ship on the battleground",
+  description: "Place a ship on the battleground",
   schema: z.object({
+    size: z.number().describe("Size of the ship to place — must be one of the remaining fleet sizes"),
     origin: z
       .string()
       .describe(
@@ -26,7 +27,7 @@ export const place = tool(({ origin, direction, description }) => ({ origin, dir
       .enum([Ship.ShipDirection.HORIZONTAL, Ship.ShipDirection.VERTICAL])
       .describe("Ship orientation"),
     description: z.string().describe(
-      "Explain your reasoning: which area of the grid you chose, why it fits your strategy, and which constraints you satisfy. Example: \"Top-left corner A1-D1, horizontal. Edge placement per strategy, no ships nearby.\"",
+      "Explain your reasoning: which ship size you chose and why, grid area, how it fits your strategy. Example: \"Size 3, top-right corner J1-J3, vertical. Largest remaining, edge placement per strategy.\"",
     ),
   }),
 })

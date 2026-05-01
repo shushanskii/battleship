@@ -79,9 +79,9 @@ ${Board.print(board, state.ships)}
 Placement history:
 ${state.history.length > 0 ? state.history.join('\n') : '(none yet)'}
 
-Ships remaining to place: ${state.unplacedShips.join(', ')}
+Ships remaining to place (sizes): ${state.unplacedShips.join(', ')}
 
-Place a ship of size ${state.unplacedShips[0]}. You MUST call the "place" tool.
+Choose which ship to place next according to your strategy and specify its position. You MUST call the "place" tool.
     `),
         ])
     return {

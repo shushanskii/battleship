@@ -25,8 +25,7 @@ export const model = new ChatOpenAI({
   configuration: {
     baseURL: "http://192.168.0.36:1234/v1",
   },
-  apiKey: "asdasdas",
-  temperature: 0.7,
+  apiKey: 'some-key',
 }).bindTools([defineStrategy, place])
 
 export const BattleshipState = new StateSchema({
@@ -39,7 +38,13 @@ export const BattleshipState = new StateSchema({
   }),
   unplacedShips: new ReducedValue(
     z.array(z.number()).default([4, 3, 3, 2, 2, 2, 1, 1, 1, 1]),
-    { reducer: (current: number[]) => current.slice(1) },
+    {
+      inputSchema: z.number(),
+      reducer: (current: number[], removed: number) => {
+        const idx = current.indexOf(removed)
+        return idx === -1 ? current : [...current.slice(0, idx), ...current.slice(idx + 1)]
+      },
+    },
   ),
   messages: MessagesValue,
   llmCalls: new ReducedValue(z.number().default(0), {
@@ -71,12 +76,13 @@ const toolNode: GraphNode<typeof BattleshipState> = async (state, config) => {
   config?.writer && config.writer({ agent: `tool call: ${JSON.stringify(toolCall)}` })
 
   if (toolCall.name === place.name) {
-    const { origin, direction, description } = toolCall.args as {
+    const { origin, direction, size, description } = toolCall.args as {
       origin: string
       direction: Ship.ShipDirection
+      size: number
       description: string
     }
-    const ship = Ship.init(origin, direction, state.unplacedShips[0])
+    const ship = Ship.init(origin, direction, size)
 
     const board = Board.init()
     for (const s of state.ships) {
@@ -84,7 +90,7 @@ const toolNode: GraphNode<typeof BattleshipState> = async (state, config) => {
     }
     Board.place(board, ship)
 
-    return { board, ships: ship, unplacedShips: [], history: `${origin}, ${direction}, ${description}` }
+    return { board, ships: ship, unplacedShips: size, history: `size ${size}, ${origin}, ${direction} — ${description}` }
   }
 
   if (toolCall.name === defineStrategy.name) {
@@ -115,11 +121,18 @@ const shouldPlace: ConditionalEdgeRouter<typeof BattleshipState, any> = (
     return "askToPlace"
   }
 
-  const { origin, direction } = toolCall.args as {
+  const { origin, direction, size } = toolCall.args as {
     origin: string
     direction: Ship.ShipDirection
+    size: number
   }
-  const ship = Ship.init(origin, direction, state.unplacedShips[0])
+
+  if (!state.unplacedShips.includes(size)) {
+    config?.writer && config.writer({ agent: `Invalid ship size: ${size}` })
+    return "askToPlace"
+  }
+
+  const ship = Ship.init(origin, direction, size)
 
   const board = Board.init()
   for (const s of state.ships) {
