@@ -1,8 +1,10 @@
-import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import styled from "styled-components";
-import type { RootState } from "../store";
-import { sendAnswer } from "../store/game/slice";
+import { useState } from "react"
+import { useDispatch, useSelector } from "react-redux"
+import styled from "styled-components"
+import type { RootState } from "../store"
+import { sendAnswer } from "../store/game/slice"
+import { BoardView } from "./BoardView"
+import { TokensView } from "./TokensView"
 
 const Container = styled.div`
   display: flex;
@@ -12,7 +14,7 @@ const Container = styled.div`
   margin: 0 auto;
   padding: 16px;
   box-sizing: border-box;
-`;
+`
 
 const MessageList = styled.div`
   flex: 1;
@@ -21,7 +23,7 @@ const MessageList = styled.div`
   flex-direction: column;
   gap: 8px;
   padding: 8px 0;
-`;
+`
 
 const Message = styled.div`
   padding: 8px 12px;
@@ -30,14 +32,14 @@ const Message = styled.div`
   font-family: monospace;
   white-space: pre-wrap;
   word-break: break-word;
-`;
+`
 
 const InputRow = styled.div`
   display: flex;
   gap: 8px;
   padding-top: 8px;
   border-top: 1px solid #ddd;
-`;
+`
 
 const Input = styled.input`
   flex: 1;
@@ -45,7 +47,7 @@ const Input = styled.input`
   font-size: 15px;
   border: 1px solid #ccc;
   border-radius: 6px;
-`;
+`
 
 const SendButton = styled.button`
   padding: 8px 20px;
@@ -55,42 +57,54 @@ const SendButton = styled.button`
   background: #333;
   color: #fff;
   &:hover { background: #555; }
-`;
+`
 
 export const GameView = () => {
-    const [text, setText] = useState("");
-    const dispatch = useDispatch();
-    const messages = useSelector((state: RootState) => state.game.messages);
+  const [text, setText] = useState("")
+  const dispatch = useDispatch()
+  const messages = useSelector((state: RootState) => state.game.messages)
 
-    const handleSend = () => {
-        if (!text.trim()) {
-            return;
-        }
-        dispatch(sendAnswer(text.trim()));
-        setText("");
-    };
+  const handleSend = () => {
+    if (!text.trim()) {
+      return
+    }
+    dispatch(sendAnswer(text.trim()))
+    setText("")
+  }
 
-    return (
-        <Container>
-            <MessageList>
-                {Object.entries(messages).map(([id, msg]) => (
-                    <Message key={id}>
-                        <strong>{msg.type}</strong>:{" "}
-                        {typeof msg.payload === "string"
-                            ? msg.payload
-                            : JSON.stringify(msg.payload)}
-                    </Message>
-                ))}
-            </MessageList>
-            <InputRow>
-                <Input
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                    placeholder="Type your answer..."
-                />
-                <SendButton onClick={handleSend}>Send</SendButton>
-            </InputRow>
-        </Container>
-    );
-};
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setText(e.target.value)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSend()
+    }
+  }
+
+  return (
+    <Container>
+      <BoardView />
+      <TokensView />
+      <MessageList>
+        {Object.entries(messages).map(([id, msg]) => (
+          <Message key={id}>
+            <strong>{msg.type}</strong>:{" "}
+            {typeof msg.payload === "string"
+              ? msg.payload
+              : JSON.stringify(msg.payload)}
+          </Message>
+        ))}
+      </MessageList>
+      <InputRow>
+        <Input
+          value={text}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          placeholder="Type your answer..."
+        />
+        <SendButton onClick={handleSend}>Send</SendButton>
+      </InputRow>
+    </Container>
+  )
+}
