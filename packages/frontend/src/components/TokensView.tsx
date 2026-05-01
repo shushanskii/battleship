@@ -1,6 +1,6 @@
 import { useSelector } from "react-redux"
 import styled from "styled-components"
-import type { RootState } from "../store"
+import { selectTotalTokens } from "../store/game/selectors"
 
 const Container = styled.div`
     font-family: monospace;
@@ -10,7 +10,7 @@ const Container = styled.div`
 `
 
 export const TokensView = () => {
-  const tokens = useSelector((state: RootState) => state.game.tokens)
+  const tokens = useSelector(selectTotalTokens)
 
   if (!tokens) {
     return null

@@ -1,16 +1,12 @@
-import { nanoid } from "@reduxjs/toolkit"
+import { MessageType } from "@battleship/core"
 import { END, eventChannel } from "redux-saga"
 import { call, fork, put, take, takeLatest } from "redux-saga/effects"
-import type { WsMessage } from "./slice"
-import {
-  receiveMessage,
-  sendAnswer,
-  sessionCreated,
-  startNewGame,
-} from "./slice"
+import { receiveMessage, sendAnswer, sessionCreated, startNewSession } from "./slice"
+
+type WireMessage = { type: MessageType; payload: unknown }
 
 function createWsChannel(ws: WebSocket) {
-  return eventChannel<WsMessage>((emit) => {
+  return eventChannel<WireMessage>((emit) => {
     ws.onmessage = (e) => emit(JSON.parse(e.data))
     ws.onclose = () => emit(END as any)
     return () => ws.close()
@@ -20,8 +16,8 @@ function createWsChannel(ws: WebSocket) {
 function* watchIncoming(ws: WebSocket): Generator {
   const channel: any = yield call(createWsChannel, ws)
   while (true) {
-    const message: any = yield take(channel)
-    yield put(receiveMessage({ id: nanoid(), message }))
+    const { type, payload }: any = yield take(channel)
+    yield put(receiveMessage({ type, payload }))
   }
 }
 
@@ -32,7 +28,7 @@ function* watchOutgoing(ws: WebSocket): Generator {
   }
 }
 
-function* newGameSaga(): Generator {
+function* newSessionSaga(): Generator {
   const response: any = yield call(fetch, "http://192.168.0.103:3001/session", {
     method: "POST",
   })
@@ -52,6 +48,6 @@ function* newGameSaga(): Generator {
   yield fork(watchOutgoing, ws)
 }
 
-export function* gameSaga() {
-  yield takeLatest(startNewGame.type, newGameSaga)
+export function* sessionsSaga() {
+  yield takeLatest(startNewSession.type, newSessionSaga)
 }

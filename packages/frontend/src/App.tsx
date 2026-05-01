@@ -12,7 +12,7 @@ const Center = styled.div`
 `
 
 export const App = () => {
-  const sessionId = useSelector((state: RootState) => state.game.sessionId)
+  const sessionId = useSelector((state: RootState) => state.sessions.sessionId)
   return sessionId ? (
     <GameView />
   ) : (

@@ -1,3 +1,4 @@
 export type { Board, Cell, CellStatus } from "./board"
-export * from "./coords"
 export type { Ship, ShipDirection } from "./ship"
+export * from "./coords"
+export * from "./protocol"

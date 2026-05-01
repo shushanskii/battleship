@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import styled from "styled-components"
-import type { RootState } from "../store"
+import { selectAgentMessages } from "../store/game/selectors"
 import { sendAnswer } from "../store/game/slice"
 import { BoardView } from "./BoardView"
 import { TokensView } from "./TokensView"
@@ -62,7 +62,7 @@ const SendButton = styled.button`
 export const GameView = () => {
   const [text, setText] = useState("")
   const dispatch = useDispatch()
-  const messages = useSelector((state: RootState) => state.game.messages)
+  const messages = useSelector(selectAgentMessages)
 
   const handleSend = () => {
     if (!text.trim()) {
@@ -87,13 +87,8 @@ export const GameView = () => {
       <BoardView />
       <TokensView />
       <MessageList>
-        {Object.entries(messages).map(([id, msg]) => (
-          <Message key={id}>
-            <strong>{msg.type}</strong>:{" "}
-            {typeof msg.payload === "string"
-              ? msg.payload
-              : JSON.stringify(msg.payload)}
-          </Message>
+        {messages.map((msg, index) => (
+          <Message key={`${index}-message`}>{msg}</Message>
         ))}
       </MessageList>
       <InputRow>

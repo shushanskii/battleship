@@ -68,7 +68,10 @@ const BattleshipState = new StateSchema({
   }),
 })
 
-const llmCall: GraphNode<typeof BattleshipState> = async (state) => {
+const llmCall: GraphNode<typeof BattleshipState> = async (state, config) => {
+  
+  config?.writer && config.writer({ agent: "LLM request" });
+  
   const board = Board.init()
   for (const ship of state.ships) {
     Board.place(board, ship)
@@ -120,7 +123,7 @@ Place a ship of size ${state.unplacedShips[0]}. You MUST call the "place" tool.
   }
 }
 
-const toolNode: GraphNode<typeof BattleshipState> = async (state) => {
+const toolNode: GraphNode<typeof BattleshipState> = async (state, config) => {
   const lastMessage = state.messages[state.messages.length - 1]
 
   if (!AIMessage.isInstance(lastMessage)) {
@@ -131,6 +134,8 @@ const toolNode: GraphNode<typeof BattleshipState> = async (state) => {
   if (!toolCall) {
     return { messages: [] }
   }
+
+  config?.writer && config.writer({ agent: `too call, ${JSON.stringify(toolCall)}` });
 
   const { origin, direction } = toolCall.args as {
     origin: string
@@ -206,11 +211,11 @@ const approvalNode = async () => {
 
 export const newAgent = () =>
   new StateGraph(BattleshipState)
-    .addNode("approvalNode", approvalNode)
+    // .addNode("approvalNode", approvalNode)
     .addNode("llmCall", llmCall)
     .addNode("toolNode", toolNode)
-    .addEdge(START, "approvalNode")
-    .addEdge("approvalNode", "llmCall")
+    .addEdge(START, "llmCall")
+    // .addEdge("approvalNode", "llmCall")
     .addConditionalEdges("llmCall", shouldPlace, ["toolNode", "llmCall", END])
     .addConditionalEdges("toolNode", shouldCallLLM, ["llmCall", END])
     .compile({ checkpointer: new MemorySaver() })
