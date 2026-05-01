@@ -11,6 +11,7 @@ export const runStream = async (
   for await (const [mode, chunk] of await agent
     .withConfig({
       configurable: { thread_id: id },
+      recursionLimit: 100,
     })
     .stream(input, {
       streamMode: ["messages", "updates", "values", "custom"],
@@ -21,6 +22,10 @@ export const runStream = async (
       if (message.response_metadata?.usage?.total_tokens) {
         sendMessage(id, MessageType.TOKENS, message.response_metadata.usage.total_tokens)
       }
+
+      // if (message.additional_kwargs?.reasoning_content) {
+      //   thinking += message.additional_kwargs.reasoning_content;
+      // }
     }
 
     if (mode === "updates") {
@@ -37,9 +42,8 @@ export const runStream = async (
       sendMessage(id, MessageType.BOARD, chunk.board)
     }
 
-    if(mode === "custom") {
+    if (mode === "custom") {
       sendMessage(id, MessageType.AGENT, chunk.agent)
-      // console.log(chunk)
     }
   }
 }
