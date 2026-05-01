@@ -7,12 +7,14 @@
   "exports": {
     ".": "./src/index.ts",
     "./board": "./src/board.ts",
-    "./ship": "./src/ship.ts"
+    "./ship": "./src/ship.ts",
+    "./coords": "./src/coords.ts"
   },
   "typesVersions": {
     "*": {
       "board": ["src/board.ts"],
-      "ship": ["src/ship.ts"]
+      "ship": ["src/ship.ts"],
+      "coords": ["src/coords.ts"]
     }
   }
 }

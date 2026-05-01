@@ -1,6 +1,5 @@
-import { coords, indexToLabel, type Ship } from "./ship"
-
-export { indexToLabel } from "./ship"
+import { indexToLabel } from "./coords"
+import { coords, type Ship } from "./ship"
 
 const DEFAULT_BOARD_SIZE = 10
 

@@ -1,4 +1,5 @@
 import * as Board from "@battleship/core/board"
+import * as Coords from "@battleship/core/coords"
 import React from "react"
 import { useSelector } from "react-redux"
 import styled from "styled-components"
@@ -43,7 +44,7 @@ export const BoardView = () => {
   }
 
   const { size, cells } = board
-  const cols = Array.from({ length: size }, (_, i) => Board.indexToLabel(i))
+  const cols = Array.from({ length: size }, (_, i) => Coords.indexToLabel(i))
 
   return (
     <Grid
