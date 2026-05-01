@@ -1,3 +1,6 @@
+const ALPHABET_SIZE = 26
+const CHAR_CODE_A = 65
+
 export enum ShipDirection {
   HORIZONTAL = "horizontal",
   VERTICAL = "vertical",
@@ -10,20 +13,20 @@ export type Ship = {
   hits: number[]
 }
 
-const indexToLabel = (n: number): string => {
-  if (n < 26) {
-    return String.fromCharCode(65 + n)
+export const indexToLabel = (n: number): string => {
+  if (n < ALPHABET_SIZE) {
+    return String.fromCharCode(CHAR_CODE_A + n)
   }
   return (
-    indexToLabel(Math.floor((n - 26) / 26)) +
-    String.fromCharCode(65 + ((n - 26) % 26))
+    indexToLabel(Math.floor((n - ALPHABET_SIZE) / ALPHABET_SIZE)) +
+    String.fromCharCode(CHAR_CODE_A + ((n - ALPHABET_SIZE) % ALPHABET_SIZE))
   )
 }
 
 const labelToIndex = (label: string): number => {
   let result = 0
   for (let i = 0; i < label.length; i++) {
-    result = result * 26 + (label.charCodeAt(i) - 65 + 1)
+    result = result * ALPHABET_SIZE + (label.charCodeAt(i) - CHAR_CODE_A + 1)
   }
   return result - 1
 }

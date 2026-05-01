@@ -1,19 +1,6 @@
+import type { Board } from "@battleship/core"
 import type { PayloadAction } from "@reduxjs/toolkit"
 import { createSlice, nanoid } from "@reduxjs/toolkit"
-
-export type CellStatus = "EMPTY" | "SHIP" | "HIT" | "MISS" | "UNKNOWN"
-
-export type Cell = {
-  index: string
-  x: number
-  y: number
-  status: CellStatus
-}
-
-export type Board = {
-  size: number
-  cells: Record<string, Cell>
-}
 
 export type WsMessage = { type: string; payload: unknown }
 

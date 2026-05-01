@@ -1,4 +1,14 @@
 import {
+  type Board,
+  boardCanPlace,
+  boardPlace,
+  boardPrint,
+  initBoard,
+  initShip,
+  type Ship,
+  ShipDirection,
+} from "@battleship/core"
+import {
   AIMessage,
   HumanMessage,
   SystemMessage,
@@ -19,14 +29,6 @@ import {
 } from "@langchain/langgraph"
 import { ChatOpenAI } from "@langchain/openai"
 import * as z from "zod"
-import {
-  type Board,
-  boardCanPlace,
-  boardPlace,
-  boardPrint,
-  initBoard,
-} from "./board"
-import { initShip, type Ship, ShipDirection } from "./ship"
 
 const place = tool(({ origin, direction }) => ({ origin, direction }), {
   name: "place",

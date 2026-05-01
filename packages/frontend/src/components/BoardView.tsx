@@ -1,8 +1,8 @@
+import { CellStatus, indexToLabel } from "@battleship/core"
 import React from "react"
 import { useSelector } from "react-redux"
 import styled from "styled-components"
 import type { RootState } from "../store"
-import type { CellStatus } from "../store/game/slice"
 
 const Grid = styled.div`
     display: grid;
@@ -21,15 +21,12 @@ const HeaderCell = styled.div`
     height: 24px;
 `
 
-const ALPHABET_SIZE = 26
-const CHAR_CODE_A = 65
-
 const cellColors: Record<CellStatus, string> = {
-  EMPTY: "#e8e8e8",
-  SHIP: "#4a90d9",
-  HIT: "#e74c3c",
-  MISS: "#95a5a6",
-  UNKNOWN: "#f0f0f0",
+  [CellStatus.EMPTY]: "#e8e8e8",
+  [CellStatus.SHIP]: "#4a90d9",
+  [CellStatus.HIT]: "#e74c3c",
+  [CellStatus.MISS]: "#95a5a6",
+  [CellStatus.UNKNOWN]: "#f0f0f0",
 }
 
 const Cell = styled.div<{ $status: CellStatus }>`
@@ -38,16 +35,6 @@ const Cell = styled.div<{ $status: CellStatus }>`
     background: ${(p) => cellColors[p.$status]};
     border-radius: 3px;
 `
-
-const indexToLabel = (n: number): string => {
-  if (n < ALPHABET_SIZE) {
-    return String.fromCharCode(CHAR_CODE_A + n)
-  }
-  return (
-    indexToLabel(Math.floor((n - ALPHABET_SIZE) / ALPHABET_SIZE)) +
-    String.fromCharCode(CHAR_CODE_A + ((n - ALPHABET_SIZE) % ALPHABET_SIZE))
-  )
-}
 
 export const BoardView = () => {
   const board = useSelector((state: RootState) => state.game.board)
@@ -75,7 +62,10 @@ export const BoardView = () => {
           {cols.map((col) => {
             const cell = cells[`${col}${row}`]
             return (
-              <Cell key={`${col}${row}`} $status={cell?.status ?? "UNKNOWN"} />
+              <Cell
+                key={`${col}${row}`}
+                $status={cell?.status ?? CellStatus.UNKNOWN}
+              />
             )
           })}
         </React.Fragment>

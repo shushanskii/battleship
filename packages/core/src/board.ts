@@ -1,6 +1,6 @@
-import { type Ship, shipCoords } from "./ship"
+import { indexToLabel, type Ship, shipCoords } from "./ship"
 
-const SIZE = 10
+const DEFAULT_BOARD_SIZE = 10
 
 export enum CellStatus {
   EMPTY = "EMPTY",
@@ -30,17 +30,7 @@ export type Board = {
   cells: Record<string, Cell>
 }
 
-const indexToLabel = (n: number): string => {
-  if (n < 26) {
-    return String.fromCharCode(65 + n)
-  }
-  return (
-    indexToLabel(Math.floor((n - 26) / 26)) +
-    String.fromCharCode(65 + ((n - 26) % 26))
-  )
-}
-
-export const initBoard = (size: number = SIZE): Board => {
+export const initBoard = (size: number = DEFAULT_BOARD_SIZE): Board => {
   const cells: Record<string, Cell> = {}
   for (let x = 0; x < size; x++) {
     for (let y = 0; y < size; y++) {
