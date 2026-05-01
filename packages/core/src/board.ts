@@ -1,4 +1,6 @@
-import { indexToLabel, type Ship, shipCoords } from "./ship"
+import { coords, indexToLabel, type Ship } from "./ship"
+
+export { indexToLabel } from "./ship"
 
 const DEFAULT_BOARD_SIZE = 10
 
@@ -30,7 +32,7 @@ export type Board = {
   cells: Record<string, Cell>
 }
 
-export const initBoard = (size: number = DEFAULT_BOARD_SIZE): Board => {
+export const init = (size: number = DEFAULT_BOARD_SIZE): Board => {
   const cells: Record<string, Cell> = {}
   for (let x = 0; x < size; x++) {
     for (let y = 0; y < size; y++) {
@@ -41,13 +43,13 @@ export const initBoard = (size: number = DEFAULT_BOARD_SIZE): Board => {
   return { size, cells }
 }
 
-export const boardGet = (board: Board, index: string): Cell | undefined =>
+export const get = (board: Board, index: string): Cell | undefined =>
   board.cells[index]
 
-export const boardAt = (board: Board, x: number, y: number): Cell | undefined =>
+export const at = (board: Board, x: number, y: number): Cell | undefined =>
   board.cells[`${indexToLabel(x)}${y + 1}`]
 
-export const boardSetStatus = (
+export const setStatus = (
   board: Board,
   index: string,
   status: CellStatus,
@@ -57,7 +59,7 @@ export const boardSetStatus = (
   }
 }
 
-export const boardClone = (board: Board): Board => ({
+export const clone = (board: Board): Board => ({
   size: board.size,
   cells: Object.fromEntries(
     Object.entries(board.cells).map(([k, v]) => [k, { ...v }]),
@@ -71,7 +73,7 @@ const neighborsOf = (board: Board, cell: Cell): Cell[] => {
       if (!dx && !dy) {
         continue
       }
-      const neighbor = boardAt(board, cell.x + dx, cell.y + dy)
+      const neighbor = at(board, cell.x + dx, cell.y + dy)
       if (neighbor) {
         result.push(neighbor)
       }
@@ -80,8 +82,8 @@ const neighborsOf = (board: Board, cell: Cell): Cell[] => {
   return result
 }
 
-export const boardCanPlace = (board: Board, ship: Ship): boolean => {
-  const cells = shipCoords(ship).map((index) => boardGet(board, index))
+export const canPlace = (board: Board, ship: Ship): boolean => {
+  const cells = coords(ship).map((index) => get(board, index))
   if (cells.some((cell) => !cell || cell.status === CellStatus.SHIP)) {
     return false
   }
@@ -89,20 +91,20 @@ export const boardCanPlace = (board: Board, ship: Ship): boolean => {
   return forbidden.every((cell) => cell.status !== CellStatus.SHIP)
 }
 
-export const boardPlace = (board: Board, ship: Ship): void => {
-  if (!boardCanPlace(board, ship)) {
+export const place = (board: Board, ship: Ship): void => {
+  if (!canPlace(board, ship)) {
     throw new Error(`Cannot place ship at ${ship.origin}`)
   }
-  for (const index of shipCoords(ship)) {
-    boardSetStatus(board, index, CellStatus.SHIP)
+  for (const index of coords(ship)) {
+    setStatus(board, index, CellStatus.SHIP)
   }
 }
 
-export const boardPrint = (board: Board, ships: Ship[] = []): string => {
-  const snapshot = boardClone(board)
+export const print = (board: Board, ships: Ship[] = []): string => {
+  const snapshot = clone(board)
   for (const ship of ships) {
-    shipCoords(ship).forEach((index, deckIndex) => {
-      boardSetStatus(
+    coords(ship).forEach((index, deckIndex) => {
+      setStatus(
         snapshot,
         index,
         ship.hits.includes(deckIndex) ? CellStatus.HIT : CellStatus.SHIP,

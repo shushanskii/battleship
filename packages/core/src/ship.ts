@@ -36,7 +36,7 @@ const parseCoord = (coord: string): { col: number; row: number } => {
   return { col: labelToIndex(match[1]), row: parseInt(match[2], 10) - 1 }
 }
 
-export const initShip = (
+export const init = (
   origin: string,
   direction: ShipDirection,
   length: number,
@@ -47,7 +47,7 @@ export const initShip = (
   hits: [],
 })
 
-export const shipCoords = (ship: Ship): string[] => {
+export const coords = (ship: Ship): string[] => {
   const { col, row } = parseCoord(ship.origin)
   return Array.from({ length: ship.length }, (_, i) =>
     ship.direction === ShipDirection.HORIZONTAL
@@ -56,11 +56,10 @@ export const shipCoords = (ship: Ship): string[] => {
   )
 }
 
-export const shipHit = (ship: Ship, deckIndex: number): void => {
+export const hit = (ship: Ship, deckIndex: number): void => {
   if (!ship.hits.includes(deckIndex)) {
     ship.hits.push(deckIndex)
   }
 }
 
-export const shipIsSunk = (ship: Ship): boolean =>
-  ship.hits.length >= ship.length
+export const isSunk = (ship: Ship): boolean => ship.hits.length >= ship.length

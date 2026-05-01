@@ -1,4 +1,4 @@
-import { CellStatus, indexToLabel } from "@battleship/core"
+import * as Board from "@battleship/core/board"
 import React from "react"
 import { useSelector } from "react-redux"
 import styled from "styled-components"
@@ -21,15 +21,15 @@ const HeaderCell = styled.div`
     height: 24px;
 `
 
-const cellColors: Record<CellStatus, string> = {
-  [CellStatus.EMPTY]: "#e8e8e8",
-  [CellStatus.SHIP]: "#4a90d9",
-  [CellStatus.HIT]: "#e74c3c",
-  [CellStatus.MISS]: "#95a5a6",
-  [CellStatus.UNKNOWN]: "#f0f0f0",
+const cellColors: Record<Board.CellStatus, string> = {
+  [Board.CellStatus.EMPTY]: "#e8e8e8",
+  [Board.CellStatus.SHIP]: "#4a90d9",
+  [Board.CellStatus.HIT]: "#e74c3c",
+  [Board.CellStatus.MISS]: "#95a5a6",
+  [Board.CellStatus.UNKNOWN]: "#f0f0f0",
 }
 
-const Cell = styled.div<{ $status: CellStatus }>`
+const Cell = styled.div<{ $status: Board.CellStatus }>`
     width: 28px;
     height: 28px;
     background: ${(p) => cellColors[p.$status]};
@@ -43,7 +43,7 @@ export const BoardView = () => {
   }
 
   const { size, cells } = board
-  const cols = Array.from({ length: size }, (_, i) => indexToLabel(i))
+  const cols = Array.from({ length: size }, (_, i) => Board.indexToLabel(i))
 
   return (
     <Grid
@@ -64,7 +64,7 @@ export const BoardView = () => {
             return (
               <Cell
                 key={`${col}${row}`}
-                $status={cell?.status ?? CellStatus.UNKNOWN}
+                $status={cell?.status ?? Board.CellStatus.UNKNOWN}
               />
             )
           })}

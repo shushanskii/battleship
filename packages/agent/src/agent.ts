@@ -1,13 +1,5 @@
-import {
-  type Board,
-  boardCanPlace,
-  boardPlace,
-  boardPrint,
-  initBoard,
-  initShip,
-  type Ship,
-  ShipDirection,
-} from "@battleship/core"
+import * as Board from "@battleship/core/board"
+import * as Ship from "@battleship/core/ship"
 import {
   AIMessage,
   HumanMessage,
@@ -40,7 +32,7 @@ const place = tool(({ origin, direction }) => ({ origin, direction }), {
         "First deck coordinate (leftmost if horizontal, topmost if vertical)",
       ),
     direction: z
-      .enum([ShipDirection.HORIZONTAL, ShipDirection.VERTICAL])
+      .enum([Ship.ShipDirection.HORIZONTAL, Ship.ShipDirection.VERTICAL])
       .describe("Ship orientation"),
   }),
 })
@@ -59,12 +51,12 @@ export const model = new ChatOpenAI({
 }).bindTools(tools)
 
 const BattleshipState = new StateSchema({
-  board: new ReducedValue(z.custom<Board>().default(initBoard()), {
+  board: new ReducedValue(z.custom<Board.Board>().default(Board.init()), {
     reducer: (_, next) => next,
   }),
-  ships: new ReducedValue(z.custom<Ship[]>().default([]), {
-    inputSchema: z.custom<Ship>(),
-    reducer: (current: Ship[], placed: Ship) => [...current, placed],
+  ships: new ReducedValue(z.custom<Ship.Ship[]>().default([]), {
+    inputSchema: z.custom<Ship.Ship>(),
+    reducer: (current: Ship.Ship[], placed: Ship.Ship) => [...current, placed],
   }),
   unplacedShips: new ReducedValue(
     z.array(z.number()).default([4, 3, 3, 2, 2, 2, 1, 1, 1, 1]),
@@ -77,9 +69,9 @@ const BattleshipState = new StateSchema({
 })
 
 const llmCall: GraphNode<typeof BattleshipState> = async (state) => {
-  const board = initBoard()
+  const board = Board.init()
   for (const ship of state.ships) {
-    boardPlace(board, ship)
+    Board.place(board, ship)
   }
 
   const response = await model.invoke([
@@ -118,7 +110,7 @@ You will receive:
     ),
     new HumanMessage(`
 Current battleground:
-${boardPrint(board, state.ships)}
+${Board.print(board, state.ships)}
 
 Place a ship of size ${state.unplacedShips[0]}. You MUST call the "place" tool.
         `),
@@ -142,15 +134,15 @@ const toolNode: GraphNode<typeof BattleshipState> = async (state) => {
 
   const { origin, direction } = toolCall.args as {
     origin: string
-    direction: ShipDirection
+    direction: Ship.ShipDirection
   }
-  const ship = initShip(origin, direction, state.unplacedShips[0])
+  const ship = Ship.init(origin, direction, state.unplacedShips[0])
 
-  const board = initBoard()
+  const board = Board.init()
   for (const s of state.ships) {
-    boardPlace(board, s)
+    Board.place(board, s)
   }
-  boardPlace(board, ship)
+  Board.place(board, ship)
 
   return {
     board,
@@ -174,16 +166,16 @@ const shouldPlace: ConditionalEdgeRouter<typeof BattleshipState, any> = (
 
   const { origin, direction } = toolCall.args as {
     origin: string
-    direction: ShipDirection
+    direction: Ship.ShipDirection
   }
-  const ship = initShip(origin, direction, state.unplacedShips[0])
+  const ship = Ship.init(origin, direction, state.unplacedShips[0])
 
-  const board = initBoard()
+  const board = Board.init()
   for (const s of state.ships) {
-    boardPlace(board, s)
+    Board.place(board, s)
   }
 
-  if (boardCanPlace(board, ship)) {
+  if (Board.canPlace(board, ship)) {
     return "toolNode"
   } else {
     return "llmCall"

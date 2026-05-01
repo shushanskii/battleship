@@ -1,4 +1,4 @@
-import type { Board } from "@battleship/core"
+import type { Board } from "@battleship/core/board"
 import type { PayloadAction } from "@reduxjs/toolkit"
 import { createSlice, nanoid } from "@reduxjs/toolkit"
 
