@@ -10,6 +10,7 @@ const selectCurrentSession = (state: RootState) => {
 }
 
 export const selectModels = (state: RootState) => state.sessions.models
+export const selectStartedAt = (state: RootState) => state.sessions.startedAt
 
 const makeSelectorCache = <T>(
   factory: (modelName: string) => (state: RootState) => T,

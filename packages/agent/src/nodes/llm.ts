@@ -4,7 +4,7 @@ import { HumanMessage, SystemMessage } from "langchain"
 import { BattleshipState, getModel } from "../agent"
 
 export const askForStrategy: GraphNode<typeof BattleshipState> = async (state, config) => {
-    config?.writer && config.writer({ agent: "Defining strategy" })
+    config?.writer && config.writer({ agent: "Define strategy" })
 
     const model = getModel(config?.configurable?.modelName as string)
     const response = await model
@@ -43,7 +43,7 @@ Legend:
 }
 
 export const askToPlace: GraphNode<typeof BattleshipState> = async (state, config) => {
-    config?.writer && config.writer({ agent: "Placing ship" })
+    config?.writer && config.writer({ agent: "Place ship" })
 
     const board = Board.init()
     for (const ship of state.ships) {

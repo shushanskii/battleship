@@ -75,8 +75,6 @@ const toolNode: GraphNode<typeof BattleshipState> = async (state, config) => {
     return { messages: [] }
   }
 
-  config?.writer && config.writer({ agent: `tool call: ${JSON.stringify(toolCall)}` })
-
   if (toolCall.name === place.name) {
     const { origin, direction, size, description } = toolCall.args as {
       origin: string
@@ -92,15 +90,16 @@ const toolNode: GraphNode<typeof BattleshipState> = async (state, config) => {
     }
     Board.place(board, ship)
 
+    config?.writer && config.writer({ agent: "Ship placed" })
     return { board, ships: ship, unplacedShips: size, history: `size ${size}, ${origin}, ${direction} — ${description}` }
   }
 
   if (toolCall.name === defineStrategy.name) {
-
     const { strategy } = toolCall.args as {
       strategy: string
     }
 
+    config?.writer && config.writer({ agent: "Strategy defined" })
     return { strategy }
   }
 
@@ -116,8 +115,6 @@ const shouldPlace: ConditionalEdgeRouter<typeof BattleshipState, any> = (
     return END
   }
 
-  config?.writer && config.writer({ agent: "Check ship place" })
-
   const toolCall = lastMessage.tool_calls?.[0]
   if (!toolCall) {
     return "askToPlace"
@@ -130,7 +127,7 @@ const shouldPlace: ConditionalEdgeRouter<typeof BattleshipState, any> = (
   }
 
   if (!state.unplacedShips.includes(size)) {
-    config?.writer && config.writer({ agent: `Invalid ship size: ${size}` })
+    config?.writer && config.writer({ agent: "Invalid size, retrying" })
     return "askToPlace"
   }
 
@@ -144,7 +141,7 @@ const shouldPlace: ConditionalEdgeRouter<typeof BattleshipState, any> = (
   if (Board.canPlace(board, ship)) {
     return "toolNode"
   } else {
-    config?.writer && config.writer({ agent: "Can't place ship" })
+    config?.writer && config.writer({ agent: "Invalid position, retrying" })
     return "askToPlace"
   }
 }

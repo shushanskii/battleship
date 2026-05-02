@@ -14,7 +14,7 @@ export type MessageValue = {
   [MessageType.TOKENS]: number
   [MessageType.QUESTION]: string
   [MessageType.BOARD]: Board
-  [MessageType.AGENT]: string
+  [MessageType.AGENT]: { text: string; ts: number }
   [MessageType.HISTORY]: string[]
   [MessageType.LLM_CALLS]: number
   [MessageType.STRATEGY]: string

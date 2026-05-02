@@ -36,7 +36,7 @@ function* newSessionSaga(action: any): Generator {
   })
   const { id }: any = yield call([response, "json"])
 
-  yield put(sessionCreated({ id, models }))
+  yield put(sessionCreated({ id, models, startedAt: Date.now() }))
 
   const ws = new WebSocket(`ws://192.168.0.103:3002?id=${id}`)
   yield call(

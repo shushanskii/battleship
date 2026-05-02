@@ -11,12 +11,14 @@ type SessionData = Record<string, ModelData>
 type SessionsState = {
   sessionId: string | null
   models: string[]
+  startedAt: number | null
   sessions: Record<string, SessionData>
 }
 
 const initialState: SessionsState = {
   sessionId: null,
   models: [],
+  startedAt: null,
   sessions: {},
 }
 
@@ -27,10 +29,11 @@ const sessionsSlice = createSlice({
     startNewSession: (_state, _action: PayloadAction<{ models: [string, string] }>) => {},
     sessionCreated: (
       state,
-      { payload }: PayloadAction<{ id: string; models: string[] }>,
+      { payload }: PayloadAction<{ id: string; models: string[]; startedAt: number }>,
     ) => {
       state.sessionId = payload.id
       state.models = payload.models
+      state.startedAt = payload.startedAt
       state.sessions[payload.id] = {}
     },
     receiveMessage: (

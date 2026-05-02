@@ -1,6 +1,7 @@
 import { useSelector } from "react-redux"
 import styled from "styled-components"
-import { selectAgentMessages, selectModels } from "../store/game/selectors"
+import { selectModels } from "../store/game/selectors"
+import { AgentMessages } from "./AgentMessages"
 import { BoardView } from "./BoardView"
 import { HistoryView } from "./HistoryView"
 import { StrategyView } from "./StrategyView"
@@ -31,43 +32,16 @@ const ModelLabel = styled.div`
   text-overflow: ellipsis;
 `
 
-const MessageList = styled.div`
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 8px 0;
-`
-
-const Message = styled.div`
-  padding: 6px 10px;
-  background: #f5f5f5;
-  border-radius: 6px;
-  font-family: monospace;
-  font-size: 12px;
-  white-space: pre-wrap;
-  word-break: break-word;
-`
-
-const PlayerView = ({ modelName }: { modelName: string }) => {
-  const messages = useSelector(selectAgentMessages(modelName))
-
-  return (
-    <PlayerColumn>
-      <ModelLabel>{modelName}</ModelLabel>
-      <BoardView modelName={modelName} />
-      <TokensView modelName={modelName} />
-      <StrategyView modelName={modelName} />
-      <HistoryView modelName={modelName} />
-      <MessageList>
-        {messages.map((msg, index) => (
-          <Message key={`${index}-message`}>{msg}</Message>
-        ))}
-      </MessageList>
-    </PlayerColumn>
-  )
-}
+const PlayerView = ({ modelName }: { modelName: string }) => (
+  <PlayerColumn>
+    <ModelLabel>{modelName}</ModelLabel>
+    <BoardView modelName={modelName} />
+    <TokensView modelName={modelName} />
+    <StrategyView modelName={modelName} />
+    <HistoryView modelName={modelName} />
+    <AgentMessages modelName={modelName} />
+  </PlayerColumn>
+)
 
 export const GameView = () => {
   const models = useSelector(selectModels)

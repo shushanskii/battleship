@@ -55,7 +55,7 @@ const runStream = async (
     }
 
     if (mode === "custom") {
-      boundSendMessage(id, MessageType.AGENT, chunk.agent)
+      boundSendMessage(id, MessageType.AGENT, { text: chunk.agent, ts: Date.now() })
     }
   }
 }
