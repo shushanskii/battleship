@@ -9,8 +9,8 @@ const Container = styled.div`
     padding: 4px 0;
 `
 
-export const TokensView = () => {
-  const tokens = useSelector(selectTotalTokens)
+export const TokensView = ({ modelName }: { modelName: string }) => {
+  const tokens = useSelector(selectTotalTokens(modelName))
 
   if (!tokens) {
     return null

@@ -1,26 +1,52 @@
 import { MessageType, type MessageValue } from "@battleship/core"
 import * as Board from "@battleship/core/board"
+import { createSelector } from "reselect"
 import type { RootState } from "../index"
+import type { ModelMessage } from "./slice"
 
-const currentSession = (state: RootState) => {
+const selectCurrentSession = (state: RootState) => {
   const { sessionId, sessions } = state.sessions
   return sessionId ? (sessions[sessionId] ?? {}) : {}
 }
 
-export const selectBoard = (state: RootState): MessageValue[MessageType.BOARD] => {
-  const boards = currentSession(state)[MessageType.BOARD]
-  return boards ? (boards[boards.length - 1] as MessageValue[MessageType.BOARD]) : Board.init()
-}
+export const selectModels = (state: RootState) => state.sessions.models
 
-export const selectTotalTokens = (state: RootState): number => {
-  const tokens = currentSession(state)[MessageType.TOKENS]
-  if (!tokens) {
-    return 0
+const makeSelectorCache = <T>(
+  factory: (modelName: string) => (state: RootState) => T,
+): ((modelName: string) => (state: RootState) => T) => {
+  const cache = new Map<string, (state: RootState) => T>()
+  return (modelName) => {
+    if (!cache.has(modelName)) {
+      cache.set(modelName, factory(modelName))
+    }
+    return cache.get(modelName)!
   }
-  return (tokens as MessageValue[MessageType.TOKENS][]).reduce((sum, n) => sum + n, 0)
 }
 
-export const selectAgentMessages = (state: RootState): MessageValue[MessageType.AGENT][] => {
-  const messages = currentSession(state)[MessageType.AGENT]
-  return messages ? (messages as MessageValue[MessageType.AGENT][]) : []
-}
+export const selectBoard = makeSelectorCache((modelName) =>
+  createSelector(
+    selectCurrentSession,
+    (session): MessageValue[MessageType.BOARD] => {
+      const boards = (session[modelName] ?? {})[MessageType.BOARD]
+      return boards
+        ? (boards[boards.length - 1] as MessageValue[MessageType.BOARD])
+        : Board.init()
+    },
+  ),
+)
+
+export const selectTotalTokens = makeSelectorCache((modelName) =>
+  createSelector(selectCurrentSession, (session): number => {
+    const tokens = (session[modelName] ?? {})[MessageType.TOKENS] as
+      | MessageValue[MessageType.TOKENS][]
+      | undefined
+    return tokens ? tokens.reduce((sum, n) => sum + n, 0) : 0
+  }),
+)
+
+export const selectAgentMessages = makeSelectorCache((modelName) =>
+  createSelector(selectCurrentSession, (session): MessageValue[MessageType.AGENT][] => {
+    const messages = (session[modelName] ?? {})[MessageType.AGENT]
+    return messages ? (messages as ModelMessage[] as MessageValue[MessageType.AGENT][]) : []
+  }),
+)

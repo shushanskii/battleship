@@ -21,12 +21,14 @@ import * as z from "zod"
 import { askForStrategy, askToPlace } from "./nodes/llm"
 import { defineStrategy, place } from "./tools"
 
-export const model = new ChatOpenAI({
-  configuration: {
-    baseURL: "http://192.168.0.36:1234/v1",
-  },
-  apiKey: 'some-key',
-}).bindTools([defineStrategy, place])
+export const getModel = (modelName: string) =>
+  new ChatOpenAI({
+    apiKey: "some-key",
+    model: modelName,
+    configuration: {
+      baseURL: "http://192.168.0.36:1234/v1",
+    },
+  }).bindTools([defineStrategy, place])
 
 export const BattleshipState = new StateSchema({
   board: new ReducedValue(z.custom<Board.Board>().default(Board.init()), {

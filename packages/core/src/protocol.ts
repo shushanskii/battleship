@@ -14,7 +14,6 @@ export type MessageValue = {
   [MessageType.AGENT]: string
 }
 
-export type Message<T extends MessageType> = {
-  type: T
-  payload: MessageValue[T]
-}
+export type WireMessage = {
+  [T in MessageType]: { model: string; type: T; payload: MessageValue[T] }
+}[MessageType]

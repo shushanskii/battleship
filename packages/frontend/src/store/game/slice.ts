@@ -2,17 +2,21 @@ import { MessageType, type MessageValue } from "@battleship/core"
 import type { PayloadAction } from "@reduxjs/toolkit"
 import { createSlice } from "@reduxjs/toolkit"
 
-export type AnyMessage = { [T in MessageType]: MessageValue[T] }[MessageType]
+export type ModelMessage = { [T in MessageType]: MessageValue[T] }[MessageType]
 
-type SessionData = { [T in MessageType]?: AnyMessage[] }
+type ModelData = { [T in MessageType]?: ModelMessage[] }
+
+type SessionData = Record<string, ModelData>
 
 type SessionsState = {
   sessionId: string | null
+  models: string[]
   sessions: Record<string, SessionData>
 }
 
 const initialState: SessionsState = {
   sessionId: null,
+  models: [],
   sessions: {},
 }
 
@@ -20,24 +24,32 @@ const sessionsSlice = createSlice({
   name: "sessions",
   initialState,
   reducers: {
-    startNewSession: () => {},
-    sessionCreated: (state, { payload: sessionId }: PayloadAction<string>) => {
-      state.sessionId = sessionId
-      state.sessions[sessionId] = {}
+    startNewSession: (_state, _action: PayloadAction<{ models: [string, string] }>) => {},
+    sessionCreated: (
+      state,
+      { payload }: PayloadAction<{ id: string; models: string[] }>,
+    ) => {
+      state.sessionId = payload.id
+      state.models = payload.models
+      state.sessions[payload.id] = {}
     },
     receiveMessage: (
       state,
-      action: PayloadAction<{ type: MessageType; payload: AnyMessage }>,
+      action: PayloadAction<{ model: string; type: MessageType; payload: ModelMessage }>,
     ) => {
-      const { type, payload } = action.payload
+      const { model, type, payload } = action.payload
       if (!state.sessionId) {
         return
       }
       const session = state.sessions[state.sessionId]
-      if (!session[type]) {
-        session[type] = [payload] as AnyMessage[]
+      if (!session[model]) {
+        session[model] = {}
+      }
+      const modelData = session[model]
+      if (!modelData[type]) {
+        modelData[type] = [payload] as ModelMessage[]
       } else {
-        (session[type] as AnyMessage[]).push(payload)
+        (modelData[type] as ModelMessage[]).push(payload)
       }
     },
     sendAnswer: (_, _action: PayloadAction<string>) => {},

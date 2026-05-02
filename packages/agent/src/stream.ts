@@ -1,16 +1,23 @@
 import { INTERRUPT } from "@langchain/langgraph"
-import { MessageType } from "@battleship/core"
-import { type SendMessage } from "./websocket"
+import { MessageType, type MessageValue } from "@battleship/core"
+import { sendMessage } from "./websocket"
 
-export const runStream = async (
+type BoundSendMessage = <T extends MessageType>(
+  id: string,
+  type: T,
+  payload: MessageValue[T],
+) => void
+
+const runStream = async (
   agent: any,
   id: string,
-  input: any = {},
-  sendMessage: SendMessage,
+  modelName: string,
+  input: any,
+  boundSendMessage: BoundSendMessage,
 ) => {
   for await (const [mode, chunk] of await agent
     .withConfig({
-      configurable: { thread_id: id },
+      configurable: { thread_id: id, modelName },
       recursionLimit: 100,
     })
     .stream(input, {
@@ -20,30 +27,37 @@ export const runStream = async (
       const [message] = chunk
 
       if (message.response_metadata?.usage?.total_tokens) {
-        sendMessage(id, MessageType.TOKENS, message.response_metadata.usage.total_tokens)
+        boundSendMessage(id, MessageType.TOKENS, message.response_metadata.usage.total_tokens)
       }
-
-      // if (message.additional_kwargs?.reasoning_content) {
-      //   thinking += message.additional_kwargs.reasoning_content;
-      // }
     }
 
     if (mode === "updates") {
       if (chunk[INTERRUPT]) {
         for (const i of chunk[INTERRUPT]) {
           if (i.id != null) {
-            sendMessage(id, MessageType.QUESTION, i.value)
+            boundSendMessage(id, MessageType.QUESTION, i.value)
           }
         }
       }
     }
 
     if (mode === "values") {
-      sendMessage(id, MessageType.BOARD, chunk.board)
+      boundSendMessage(id, MessageType.BOARD, chunk.board)
     }
 
     if (mode === "custom") {
-      sendMessage(id, MessageType.AGENT, chunk.agent)
+      boundSendMessage(id, MessageType.AGENT, chunk.agent)
     }
+  }
+}
+
+export const createStream = (modelName: string) => {
+  const boundSendMessage: BoundSendMessage = (id, type, payload) =>
+    sendMessage(id, modelName, type, payload)
+
+  return {
+    stream: (agent: any, id: string, input: any = {}) =>
+      runStream(agent, id, modelName, input, boundSendMessage),
+    sendMessage: boundSendMessage,
   }
 }

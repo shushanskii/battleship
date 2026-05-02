@@ -1,20 +1,15 @@
 import { Command } from "@langchain/langgraph"
 import { type WebSocket, WebSocketServer } from "ws"
-import { runStream } from "./stream"
-import { MessageType, MessageValue } from "@battleship/core"
+import { createStream } from "./stream"
+import { type MessageType, type MessageValue } from "@battleship/core"
 
 const wss = new WebSocketServer({ host: "0.0.0.0", port: 3002 })
 
 const connections = new Map<string, WebSocket>()
 
-export type SendMessage = <T extends MessageType>(
+export const sendMessage = <T extends MessageType>(
   id: string,
-  type: T,
-  payload: MessageValue[T],
-) => void
-
-export const sendMessage: SendMessage = <T extends MessageType>(
-  id: string,
+  model: string,
   type: T,
   payload: MessageValue[T],
 ) => {
@@ -22,8 +17,7 @@ export const sendMessage: SendMessage = <T extends MessageType>(
   if (!ws || ws.readyState !== 1) {
     return
   }
-
-  ws.send(JSON.stringify({ type, payload }))
+  ws.send(JSON.stringify({ model, type, payload }))
 }
 
 export const setupWebSocket = (sessions: Map<string, any>) => {
@@ -36,21 +30,25 @@ export const setupWebSocket = (sessions: Map<string, any>) => {
       return
     }
 
-    const agent = sessions.get(id)
-    if (!agent) {
+    const agents: Record<string, any> = sessions.get(id)
+    if (!agents) {
       ws.close()
       return
     }
 
     connections.set(id, ws)
 
-    runStream(agent, id, {}, sendMessage)
+    for (const [modelName, agent] of Object.entries(agents)) {
+      const { stream } = createStream(modelName)
+      stream(agent, id)
+    }
 
     ws.on("message", (raw: Buffer) => {
       try {
-        const { type, payload } = JSON.parse(raw.toString())
+        const { type, model: modelName, payload } = JSON.parse(raw.toString())
         if (type === "answer") {
-          runStream(agent, id, new Command({ resume: payload }), sendMessage)
+          const { stream } = createStream(modelName)
+          stream(sessions.get(id)[modelName], id, new Command({ resume: payload }))
         }
       } catch (_e) {
         console.error(`[${id}] invalid message:`, raw.toString())

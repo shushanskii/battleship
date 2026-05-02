@@ -16,7 +16,7 @@ export const NewGameButton = () => {
   const dispatch = useDispatch()
 
   const handleClick = () => {
-    dispatch(startNewSession())
+    dispatch(startNewSession({ models: ["google/gemma-4-e2b", "qwen/qwen3.5-9b"] }))
   }
 
   return <Button onClick={handleClick}>New Game</Button>

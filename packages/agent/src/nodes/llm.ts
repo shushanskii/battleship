@@ -1,12 +1,12 @@
 import * as Board from "@battleship/core/board"
 import { GraphNode } from "@langchain/langgraph"
 import { HumanMessage, SystemMessage } from "langchain"
-import { BattleshipState, model } from "../agent"
-import { defineStrategy, place } from "../tools"
+import { BattleshipState, getModel } from "../agent"
 
 export const askForStrategy: GraphNode<typeof BattleshipState> = async (state, config) => {
     config?.writer && config.writer({ agent: "Defining strategy" })
 
+    const model = getModel(config?.configurable?.modelName as string)
     const response = await model
         .invoke([
             new SystemMessage(`
@@ -50,6 +50,7 @@ export const askToPlace: GraphNode<typeof BattleshipState> = async (state, confi
         Board.place(board, ship)
     }
 
+    const model = getModel(config?.configurable?.modelName as string)
     const response = await model
         .invoke([
             new SystemMessage(`

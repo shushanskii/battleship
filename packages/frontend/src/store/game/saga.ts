@@ -1,9 +1,7 @@
-import { MessageType } from "@battleship/core"
+import { type WireMessage } from "@battleship/core"
 import { END, eventChannel } from "redux-saga"
 import { call, fork, put, take, takeLatest } from "redux-saga/effects"
 import { receiveMessage, sendAnswer, sessionCreated, startNewSession } from "./slice"
-
-type WireMessage = { type: MessageType; payload: unknown }
 
 function createWsChannel(ws: WebSocket) {
   return eventChannel<WireMessage>((emit) => {
@@ -16,8 +14,8 @@ function createWsChannel(ws: WebSocket) {
 function* watchIncoming(ws: WebSocket): Generator {
   const channel: any = yield call(createWsChannel, ws)
   while (true) {
-    const { type, payload }: any = yield take(channel)
-    yield put(receiveMessage({ type, payload }))
+    const { model, type, payload }: any = yield take(channel)
+    yield put(receiveMessage({ model, type, payload }))
   }
 }
 
@@ -28,13 +26,17 @@ function* watchOutgoing(ws: WebSocket): Generator {
   }
 }
 
-function* newSessionSaga(): Generator {
+function* newSessionSaga(action: any): Generator {
+  const { models } = action.payload as { models: [string, string] }
+
   const response: any = yield call(fetch, "http://192.168.0.103:3001/session", {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ models }),
   })
   const { id }: any = yield call([response, "json"])
 
-  yield put(sessionCreated(id))
+  yield put(sessionCreated({ id, models }))
 
   const ws = new WebSocket(`ws://192.168.0.103:3002?id=${id}`)
   yield call(
