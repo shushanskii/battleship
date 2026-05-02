@@ -43,6 +43,15 @@ const runStream = async (
 
     if (mode === "values") {
       boundSendMessage(id, MessageType.BOARD, chunk.board)
+      if (chunk.history?.length > 0) {
+        boundSendMessage(id, MessageType.HISTORY, chunk.history)
+      }
+      if (chunk.llmCalls != null) {
+        boundSendMessage(id, MessageType.LLM_CALLS, chunk.llmCalls)
+      }
+      if (chunk.strategy) {
+        boundSendMessage(id, MessageType.STRATEGY, chunk.strategy)
+      }
     }
 
     if (mode === "custom") {

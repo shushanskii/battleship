@@ -5,6 +5,9 @@ export enum MessageType {
   QUESTION = "question",
   BOARD = "board",
   AGENT = "agent",
+  HISTORY = "history",
+  LLM_CALLS = "llmCalls",
+  STRATEGY = "strategy",
 }
 
 export type MessageValue = {
@@ -12,6 +15,9 @@ export type MessageValue = {
   [MessageType.QUESTION]: string
   [MessageType.BOARD]: Board
   [MessageType.AGENT]: string
+  [MessageType.HISTORY]: string[]
+  [MessageType.LLM_CALLS]: number
+  [MessageType.STRATEGY]: string
 }
 
 export type WireMessage = {

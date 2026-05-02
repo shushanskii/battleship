@@ -1,20 +1,24 @@
 import { useSelector } from "react-redux"
 import styled from "styled-components"
-import { selectTotalTokens } from "../store/game/selectors"
+import { selectLlmCalls, selectTotalTokens } from "../store/game/selectors"
 
 const Container = styled.div`
     font-family: monospace;
     font-size: 13px;
     color: #888;
     padding: 4px 0;
+    display: flex;
+    gap: 16px;
 `
 
 export const TokensView = ({ modelName }: { modelName: string }) => {
   const tokens = useSelector(selectTotalTokens(modelName))
+  const llmCalls = useSelector(selectLlmCalls(modelName))
 
-  if (!tokens) {
-    return null
-  }
-
-  return <Container>Tokens: {tokens.toLocaleString()}</Container>
+  return (
+    <Container>
+      <span>Tokens: {tokens.toLocaleString()}</span>
+      <span>LLM calls: {llmCalls}</span>
+    </Container>
+  )
 }

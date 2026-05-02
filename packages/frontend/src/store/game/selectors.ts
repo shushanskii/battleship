@@ -50,3 +50,24 @@ export const selectAgentMessages = makeSelectorCache((modelName) =>
     return messages ? (messages as ModelMessage[] as MessageValue[MessageType.AGENT][]) : []
   }),
 )
+
+export const selectHistory = makeSelectorCache((modelName) =>
+  createSelector(selectCurrentSession, (session): string[] => {
+    const history = (session[modelName] ?? {})[MessageType.HISTORY]
+    return history ? (history[history.length - 1] as string[]) : []
+  }),
+)
+
+export const selectLlmCalls = makeSelectorCache((modelName) =>
+  createSelector(selectCurrentSession, (session): number => {
+    const calls = (session[modelName] ?? {})[MessageType.LLM_CALLS]
+    return calls ? (calls[calls.length - 1] as number) : 0
+  }),
+)
+
+export const selectStrategy = makeSelectorCache((modelName) =>
+  createSelector(selectCurrentSession, (session): string => {
+    const strategy = (session[modelName] ?? {})[MessageType.STRATEGY]
+    return strategy ? (strategy[strategy.length - 1] as string) : ""
+  }),
+)

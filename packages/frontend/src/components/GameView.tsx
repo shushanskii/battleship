@@ -2,6 +2,8 @@ import { useSelector } from "react-redux"
 import styled from "styled-components"
 import { selectAgentMessages, selectModels } from "../store/game/selectors"
 import { BoardView } from "./BoardView"
+import { HistoryView } from "./HistoryView"
+import { StrategyView } from "./StrategyView"
 import { TokensView } from "./TokensView"
 
 const Container = styled.div`
@@ -56,6 +58,8 @@ const PlayerView = ({ modelName }: { modelName: string }) => {
       <ModelLabel>{modelName}</ModelLabel>
       <BoardView modelName={modelName} />
       <TokensView modelName={modelName} />
+      <StrategyView modelName={modelName} />
+      <HistoryView modelName={modelName} />
       <MessageList>
         {messages.map((msg, index) => (
           <Message key={`${index}-message`}>{msg}</Message>
