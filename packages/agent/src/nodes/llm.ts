@@ -10,33 +10,34 @@ export const askForStrategy: GraphNode<typeof BattleshipState> = async (state, c
     const response = await model
         .invoke([
             new SystemMessage(`
-You are about to place ships on a 10×10 Battleship grid (columns A–J, rows 1–10).
-Ships to place (sizes): ${state.unplacedShips.join(", ")}
+You are playing Battleship on a 10×10 grid (columns A–J, rows 1–10).
+Fleet to place (sizes): ${state.unplacedShips.join(", ")}
 
-## Input
+The game has two phases: fleet placement, then shooting turns.
 
-You will receive:
-- the current state of the battleground
-- the size of the ship to place
+## Phase 1 — Fleet placement (minimize own losses)
 
-## Grid
+Your goal is to make your fleet as hard to find as possible.
+- Spread ships across all grid sectors: corners, edges, and interior
+- Avoid clustering ships — concentrated fleets are easier to sweep
+- Mix horizontal and vertical orientations unpredictably
+- Prefer edge and corner positions; opponents often start sweeping the center
 
-10×10 grid. Columns are letters A–J, rows are numbers 1–10.
-A coordinate is a letter + number: A1, J10.
+## Phase 2 — Shooting (maximize damage to opponent)
 
-Legend:
-  (space) — empty
-  S — ship already placed
+Your goal is to destroy the opponent's fleet as efficiently as possible.
+- Open with a checkerboard (parity) pattern: only shoot cells of one color on
+  an imaginary chessboard overlay. This guarantees hitting every ship of size ≥ 2
+  in at most 50 shots.
+- On a hit, immediately probe orthogonal neighbors to determine ship orientation,
+  then finish the ship before resuming the search pattern.
+- Track every miss — never repeat a coordinate.
+- Adjust density of search based on remaining ship sizes (smaller ships need
+  a tighter pattern).
 
-## Placement rules
-
-- A ship occupies a continuous line of cells horizontally or vertically.
-- Ships cannot overlap.
-- Ships cannot touch each other, including diagonally.
-- Ships cannot extend beyond the grid boundaries.
-
+Define your strategy for both phases. You MUST call the "defineStrategy" tool.
       `),
-            new HumanMessage(`Define your strategy for positioning the fleet. You MUST call the "defineStrategy" tool.`),
+            new HumanMessage(`Define your strategy. You MUST call the "defineStrategy" tool.`),
         ])
 
     return { messages: [response], llmCalls: 1 }
