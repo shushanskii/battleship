@@ -55,7 +55,7 @@ const sessionsSlice = createSlice({
         (modelData[type] as ModelMessage[]).push(payload)
       }
     },
-    sendAnswer: (_, _action: PayloadAction<string>) => {},
+    sendAnswer: (_, _action: PayloadAction<{ model: string; answer: string }>) => {},
   },
 })
 

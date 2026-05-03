@@ -21,5 +21,5 @@ export type MessageValue = {
 }
 
 export type WireMessage = {
-  [T in MessageType]: { model: string; type: T; payload: MessageValue[T] }
+  [T in MessageType]: { type: T; payload: MessageValue[T] }
 }[MessageType]

@@ -11,19 +11,33 @@ function createWsChannel(ws: WebSocket) {
   })
 }
 
-function* watchIncoming(ws: WebSocket): Generator {
+function* watchIncoming(ws: WebSocket, modelName: string): Generator {
   const channel: any = yield call(createWsChannel, ws)
   while (true) {
-    const { model, type, payload }: any = yield take(channel)
-    yield put(receiveMessage({ model, type, payload }))
+    const { type, payload }: any = yield take(channel)
+    yield put(receiveMessage({ model: modelName, type, payload }))
   }
 }
 
-function* watchOutgoing(ws: WebSocket): Generator {
+function* watchOutgoing(ws: WebSocket, modelName: string): Generator {
   while (true) {
     const action: any = yield take(sendAnswer.type)
-    ws.send(JSON.stringify({ type: "answer", payload: action.payload }))
+    if (action.payload.model === modelName) {
+      ws.send(JSON.stringify({ type: "answer", payload: action.payload.answer }))
+    }
   }
+}
+
+function* connectModel(id: string, modelName: string): Generator {
+  const ws = new WebSocket(`ws://192.168.0.103:3002?id=${id}&model=${modelName}`)
+  yield call(
+    () =>
+      new Promise<void>((resolve) =>
+        ws.addEventListener("open", () => resolve()),
+      ),
+  )
+  yield fork(watchIncoming, ws, modelName)
+  yield fork(watchOutgoing, ws, modelName)
 }
 
 function* newSessionSaga(action: any): Generator {
@@ -38,16 +52,9 @@ function* newSessionSaga(action: any): Generator {
 
   yield put(sessionCreated({ id, models, startedAt: Date.now() }))
 
-  const ws = new WebSocket(`ws://192.168.0.103:3002?id=${id}`)
-  yield call(
-    () =>
-      new Promise<void>((resolve) =>
-        ws.addEventListener("open", () => resolve()),
-      ),
-  )
-
-  yield fork(watchIncoming, ws)
-  yield fork(watchOutgoing, ws)
+  for (const modelName of models) {
+    yield fork(connectModel, id, modelName)
+  }
 }
 
 export function* sessionsSaga() {
