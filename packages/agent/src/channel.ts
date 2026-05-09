@@ -1,5 +1,5 @@
 import { INTERRUPT, Command } from "@langchain/langgraph"
-import { MessageType, type MessageValue } from "@battleship/core"
+import { InterruptType, MessageType, type Interrupt, type MessageValue } from "@battleship/core"
 import { type WebSocket, WebSocketServer } from "ws"
 
 const wss = new WebSocketServer({ host: "0.0.0.0", port: 3002 })
@@ -38,7 +38,11 @@ const runStream = async (agent: any, id: string, modelName: string, input: any =
     if (mode === "updates") {
       if (chunk[INTERRUPT]) {
         for (const i of chunk[INTERRUPT]) {
-          if (i.id != null) {
+          if (i.id == null) continue
+          const value = i.value as Interrupt
+          if (value.type === InterruptType.READY) {
+            send(MessageType.READY, null)
+          } else {
             send(MessageType.QUESTION, i.value)
           }
         }
@@ -46,7 +50,9 @@ const runStream = async (agent: any, id: string, modelName: string, input: any =
     }
 
     if (mode === "values") {
-      send(MessageType.BOARD, chunk.board)
+      if (chunk.board != null) {
+        send(MessageType.BOARD, chunk.board)
+      }
       if (chunk.history?.length > 0) {
         send(MessageType.HISTORY, chunk.history)
       }

@@ -12,6 +12,7 @@ type SessionsState = {
   sessionId: string | null
   models: string[]
   startedAt: number | null
+  readyModels: string[]
   sessions: Record<string, SessionData>
 }
 
@@ -19,6 +20,7 @@ const initialState: SessionsState = {
   sessionId: null,
   models: [],
   startedAt: null,
+  readyModels: [],
   sessions: {},
 }
 
@@ -42,6 +44,12 @@ const sessionsSlice = createSlice({
     ) => {
       const { model, type, payload } = action.payload
       if (!state.sessionId) {
+        return
+      }
+      if (type === MessageType.READY) {
+        if (!state.readyModels.includes(model)) {
+          state.readyModels.push(model)
+        }
         return
       }
       const session = state.sessions[state.sessionId]

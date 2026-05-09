@@ -4,7 +4,6 @@ import {
   AIMessage,
 } from "@langchain/core/messages"
 import {
-  Command,
   type ConditionalEdgeRouter,
   END,
   type GraphNode,
@@ -16,6 +15,7 @@ import {
   StateGraph,
   StateSchema,
 } from "@langchain/langgraph"
+import { InterruptType } from "@battleship/core"
 import { ChatOpenAI } from "@langchain/openai"
 import * as z from "zod"
 import { askForStrategy, askToPlace } from "./nodes/llm"
@@ -162,26 +162,17 @@ const shouldPlace: ConditionalEdgeRouter<typeof BattleshipState, any> = (
   }
 }
 
-const shouldCallLLM: ConditionalEdgeRouter<typeof BattleshipState, any> = (
-  state,
-) => {
+const routeAfterTool: ConditionalEdgeRouter<typeof BattleshipState, any> = (state) => {
   if (state.unplacedShips.length > 0) {
     return "askToPlace"
-  } else {
-    return END
   }
+  return "awaitTurnNode"
 }
 
-const approvalNode = async () => {
-  // Pause execution; payload surfaces in result.__interrupt__
-  const isApproved = interrupt("Do you want to proceed?")
-
-  // Route based on the response
-  if (isApproved) {
-    return new Command({ goto: "askToPlace" }) // Runs after the resume payload is provided
-  } else {
-    return new Command({ goto: END })
-  }
+const awaitTurnNode: GraphNode<typeof BattleshipState> = async (_state, config) => {
+  config?.writer && config.writer({ agent: "Fleet ready" })
+  interrupt({ type: InterruptType.READY, payload: null })
+  return {}
 }
 
 export const newAgent = () =>
@@ -189,8 +180,10 @@ export const newAgent = () =>
     .addNode("askForStrategy", askForStrategy)
     .addNode("askToPlace", askToPlace)
     .addNode("toolNode", toolNode)
+    .addNode("awaitTurnNode", awaitTurnNode)
     .addEdge(START, "askForStrategy")
     .addEdge("askForStrategy", "toolNode")
+    .addEdge("awaitTurnNode", END)
     .addConditionalEdges("askToPlace", shouldPlace, ["toolNode", "askToPlace", END])
-    .addConditionalEdges("toolNode", shouldCallLLM, ["askToPlace", END])
+    .addConditionalEdges("toolNode", routeAfterTool, ["askToPlace", "awaitTurnNode"])
     .compile({ checkpointer: new MemorySaver() })

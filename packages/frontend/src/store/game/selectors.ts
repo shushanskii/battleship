@@ -11,6 +11,7 @@ const selectCurrentSession = (state: RootState) => {
 
 export const selectModels = (state: RootState) => state.sessions.models
 export const selectStartedAt = (state: RootState) => state.sessions.startedAt
+export const selectReadyModels = (state: RootState) => state.sessions.readyModels
 
 const makeSelectorCache = <T>(
   factory: (modelName: string) => (state: RootState) => T,
@@ -29,9 +30,8 @@ export const selectBoard = makeSelectorCache((modelName) =>
     selectCurrentSession,
     (session): MessageValue[MessageType.BOARD] => {
       const boards = (session[modelName] ?? {})[MessageType.BOARD]
-      return boards
-        ? (boards[boards.length - 1] as MessageValue[MessageType.BOARD])
-        : Board.init()
+      const last = boards?.[boards.length - 1] as MessageValue[MessageType.BOARD] | undefined
+      return last ?? Board.init()
     },
   ),
 )
