@@ -1,6 +1,6 @@
 import { useDispatch } from "react-redux"
 import styled from "styled-components"
-import { startNewSession } from "../store/actions"
+import { startSession } from "../store/commands/sessions"
 
 const Button = styled.button`
   padding: 12px 32px;
@@ -16,7 +16,7 @@ export const NewGameButton = () => {
   const dispatch = useDispatch()
 
   const handleClick = () => {
-    dispatch(startNewSession())
+    dispatch(startSession())
   }
 
   return <Button onClick={handleClick}>New Game</Button>

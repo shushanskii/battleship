@@ -2,7 +2,7 @@ import { type WireMessage } from "@battleship/core"
 import { END, eventChannel } from "redux-saga"
 import { call, fork, put, take, takeLatest } from "redux-saga/effects"
 import { receiveMessage, sendAnswer, startNewSession } from "./slice"
-import { SessionsActions } from "../actions"
+import { SessionCommands } from "../commands/sessions"
 
 function createWsChannel(ws: WebSocket) {
   return eventChannel<WireMessage>((emit) => {
@@ -56,5 +56,5 @@ function* newSessionSaga(): Generator {
 }
 
 export function* sessionsSaga() {
-  yield takeLatest(SessionsActions.START, newSessionSaga)
+  yield takeLatest(SessionCommands.START, newSessionSaga)
 }

@@ -4,6 +4,7 @@ import { selectModel } from "../store/game/selectors"
 import { AgentMessages } from "./AgentMessages"
 import { BoardView } from "./BoardView"
 import { HistoryView } from "./HistoryView"
+import { PlacementView } from "./PlacementView"
 import { StrategyView } from "./StrategyView"
 import { TokensView } from "./TokensView"
 
@@ -31,13 +32,6 @@ const ModelLabel = styled.div`
   text-overflow: ellipsis;
 `
 
-const ReadyBadge = styled.span`
-  font-family: monospace;
-  font-size: 11px;
-  color: #2a9d2a;
-  margin-left: 8px;
-`
-
 const ModelHeader = styled.div`
   display: flex;
   align-items: center;
@@ -53,6 +47,12 @@ export const GameView = () => {
 
   return (
     <Container>
+      <PlayerColumn>
+        <ModelHeader>
+          <ModelLabel>You</ModelLabel>
+        </ModelHeader>
+        <PlacementView />
+      </PlayerColumn>
       <PlayerColumn>
         <ModelHeader>
           <ModelLabel>{model}</ModelLabel>
