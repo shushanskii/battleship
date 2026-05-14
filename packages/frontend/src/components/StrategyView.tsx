@@ -20,8 +20,8 @@ const Title = styled.div`
   margin-bottom: 4px;
 `
 
-export const StrategyView = ({ modelName }: { modelName: string }) => {
-  const strategy = useSelector(selectStrategy(modelName))
+export const StrategyView = () => {
+  const strategy = useSelector(selectStrategy())
 
   return (
     <Container>

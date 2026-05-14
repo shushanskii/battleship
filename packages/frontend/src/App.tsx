@@ -2,7 +2,7 @@ import { useSelector } from "react-redux"
 import styled from "styled-components"
 import { GameView } from "./components/GameView"
 import { NewGameButton } from "./components/NewGameButton"
-import type { RootState } from "./store"
+import { selectId } from "./store/game/selectors"
 
 const Center = styled.div`
   display: flex;
@@ -12,8 +12,8 @@ const Center = styled.div`
 `
 
 export const App = () => {
-  const sessionId = useSelector((state: RootState) => state.sessions.sessionId)
-  return sessionId ? (
+  const id = useSelector(selectId)
+  return id ? (
     <GameView />
   ) : (
     <Center>

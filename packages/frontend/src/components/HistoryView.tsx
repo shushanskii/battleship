@@ -26,8 +26,8 @@ const Entry = styled.div`
   border-radius: 4px;
 `
 
-export const HistoryView = ({ modelName }: { modelName: string }) => {
-  const history = useSelector(selectHistory(modelName))
+export const HistoryView = () => {
+  const history = useSelector(selectHistory())
 
   return (
     <Container>

@@ -37,8 +37,8 @@ const Cell = styled.div<{ $status: Board.CellStatus }>`
     border-radius: 3px;
 `
 
-export const BoardView = ({ modelName }: { modelName: string }) => {
-  const board = useSelector(selectBoard(modelName))
+export const BoardView = () => {
+  const board = useSelector(selectBoard())
   const { size, cells } = board
   const cols = Array.from({ length: size }, (_, i) => Coords.indexToLabel(i))
 

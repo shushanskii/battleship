@@ -100,10 +100,7 @@ const toolNode: GraphNode<typeof BattleshipState> = async (state, config) => {
     }
     const ship = Ship.init(origin, direction, size)
 
-    const board = Board.init()
-    for (const s of state.ships) {
-      Board.place(board, s)
-    }
+    const board = Board.clone(state.board)
     Board.place(board, ship)
 
     config?.writer && config.writer({ agent: "Ship placed" })
@@ -149,12 +146,7 @@ const shouldPlace: ConditionalEdgeRouter<typeof BattleshipState, any> = (
 
   const ship = Ship.init(origin, direction, size)
 
-  const board = Board.init()
-  for (const s of state.ships) {
-    Board.place(board, s)
-  }
-
-  if (Board.canPlace(board, ship)) {
+  if (Board.canPlace(state.board, ship)) {
     return "toolNode"
   } else {
     config?.writer && config.writer({ agent: "Invalid position, retrying" })

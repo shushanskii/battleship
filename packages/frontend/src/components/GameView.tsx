@@ -1,6 +1,6 @@
 import { useSelector } from "react-redux"
 import styled from "styled-components"
-import { selectModels, selectReadyModels } from "../store/game/selectors"
+import { selectModel } from "../store/game/selectors"
 import { AgentMessages } from "./AgentMessages"
 import { BoardView } from "./BoardView"
 import { HistoryView } from "./HistoryView"
@@ -44,33 +44,25 @@ const ModelHeader = styled.div`
   margin-bottom: 8px;
 `
 
-const PlayerView = ({ modelName }: { modelName: string }) => {
-  const readyModels = useSelector(selectReadyModels)
-  const isReady = readyModels.includes(modelName)
-
-  return (
-    <PlayerColumn>
-      <ModelHeader>
-        <ModelLabel>{modelName}</ModelLabel>
-        {isReady && <ReadyBadge>fleet ready</ReadyBadge>}
-      </ModelHeader>
-      <BoardView modelName={modelName} />
-      <TokensView modelName={modelName} />
-      <StrategyView modelName={modelName} />
-      <HistoryView modelName={modelName} />
-      <AgentMessages modelName={modelName} />
-    </PlayerColumn>
-  )
-}
-
 export const GameView = () => {
-  const models = useSelector(selectModels)
+  const model = useSelector(selectModel)
+
+  if (!model) {
+    return null
+  }
 
   return (
     <Container>
-      {models.map((modelName) => (
-        <PlayerView key={modelName} modelName={modelName} />
-      ))}
+      <PlayerColumn>
+        <ModelHeader>
+          <ModelLabel>{model}</ModelLabel>
+        </ModelHeader>
+        <BoardView />
+        <TokensView />
+        <StrategyView />
+        <HistoryView />
+        <AgentMessages />
+      </PlayerColumn>
     </Container>
   )
 }

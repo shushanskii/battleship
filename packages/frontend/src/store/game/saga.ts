@@ -1,7 +1,8 @@
 import { type WireMessage } from "@battleship/core"
 import { END, eventChannel } from "redux-saga"
 import { call, fork, put, take, takeLatest } from "redux-saga/effects"
-import { receiveMessage, sendAnswer, sessionCreated, startNewSession } from "./slice"
+import { receiveMessage, sendAnswer, startNewSession } from "./slice"
+import { SessionsActions } from "../actions"
 
 function createWsChannel(ws: WebSocket) {
   return eventChannel<WireMessage>((emit) => {
@@ -11,52 +12,49 @@ function createWsChannel(ws: WebSocket) {
   })
 }
 
-function* watchIncoming(ws: WebSocket, modelName: string): Generator {
+function* watchIncoming(ws: WebSocket, model: string): Generator {
   const channel: any = yield call(createWsChannel, ws)
   while (true) {
     const { type, payload }: any = yield take(channel)
-    yield put(receiveMessage({ model: modelName, type, payload }))
+    yield put(receiveMessage({ model, type, payload }))
   }
 }
 
-function* watchOutgoing(ws: WebSocket, modelName: string): Generator {
+function* watchOutgoing(ws: WebSocket, model: string): Generator {
   while (true) {
     const action: any = yield take(sendAnswer.type)
-    if (action.payload.model === modelName) {
+    if (action.payload.model === model) {
       ws.send(JSON.stringify({ type: "answer", payload: action.payload.answer }))
     }
   }
 }
 
-function* connectModel(id: string, modelName: string): Generator {
-  const ws = new WebSocket(`ws://192.168.0.103:3002?id=${id}&model=${modelName}`)
+function* connectModel(id: string, model: string): Generator {
+  const ws = new WebSocket(`ws://192.168.0.103:3002?id=${id}&model=${model}`)
   yield call(
     () =>
       new Promise<void>((resolve) =>
         ws.addEventListener("open", () => resolve()),
       ),
   )
-  yield fork(watchIncoming, ws, modelName)
-  yield fork(watchOutgoing, ws, modelName)
+  yield fork(watchIncoming, ws, model)
+  yield fork(watchOutgoing, ws, model)
 }
 
-function* newSessionSaga(action: any): Generator {
-  const { models } = action.payload as { models: [string, string] }
+function* newSessionSaga(): Generator {
 
   const response: any = yield call(fetch, "http://192.168.0.103:3001/session", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ models }),
+    body: JSON.stringify({ model: "google/gemma-4-e2b" }),
   })
-  const { id }: any = yield call([response, "json"])
+  const { id, model }: any = yield call([response, "json"])
 
-  yield put(sessionCreated({ id, models, startedAt: Date.now() }))
+  yield put(startNewSession({ id, model, startedAt: Date.now() }))
 
-  for (const modelName of models) {
-    yield fork(connectModel, id, modelName)
-  }
+  yield fork(connectModel, id, model)
 }
 
 export function* sessionsSaga() {
-  yield takeLatest(startNewSession.type, newSessionSaga)
+  yield takeLatest(SessionsActions.START, newSessionSaga)
 }

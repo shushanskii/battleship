@@ -12,14 +12,12 @@ export const createServer = (sessions: Map<string, any>) => {
   })
 
   app.post("/session", (req, res) => {
-    const { models }: { models: [string, string] } = req.body
+    const { model }: { model: string } = req.body
     const id = crypto.randomUUID()
     const agents: Record<string, any> = {}
-    for (const modelName of models) {
-      agents[modelName] = newAgent()
-    }
+    agents[model] = newAgent()
     sessions.set(id, agents)
-    res.json({ id, models })
+    res.json({ id, model })
   })
 
   return app

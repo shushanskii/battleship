@@ -1,6 +1,6 @@
 import { useDispatch } from "react-redux"
 import styled from "styled-components"
-import { startNewSession } from "../store/game/slice"
+import { startNewSession } from "../store/actions"
 
 const Button = styled.button`
   padding: 12px 32px;
@@ -16,7 +16,7 @@ export const NewGameButton = () => {
   const dispatch = useDispatch()
 
   const handleClick = () => {
-    dispatch(startNewSession({ models: ["google/gemma-4-e2b", "qwen/qwen3.5-9b"] }))
+    dispatch(startNewSession())
   }
 
   return <Button onClick={handleClick}>New Game</Button>

@@ -11,9 +11,9 @@ const Container = styled.div`
     gap: 16px;
 `
 
-export const TokensView = ({ modelName }: { modelName: string }) => {
-  const tokens = useSelector(selectTotalTokens(modelName))
-  const llmCalls = useSelector(selectLlmCalls(modelName))
+export const TokensView = () => {
+  const tokens = useSelector(selectTotalTokens())
+  const llmCalls = useSelector(selectLlmCalls())
 
   return (
     <Container>
