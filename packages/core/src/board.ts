@@ -1,7 +1,7 @@
 import { indexToLabel } from "./coords"
 import { coords, type Ship } from "./ship"
 
-const DEFAULT_BOARD_SIZE = 10
+export const DEFAULT_BOARD_SIZE = 10
 
 export enum CellStatus {
   EMPTY = "EMPTY",
@@ -31,12 +31,12 @@ export type Board = {
   cells: Record<string, Cell>
 }
 
-export const init = (size: number = DEFAULT_BOARD_SIZE): Board => {
+export const init = (size: number = DEFAULT_BOARD_SIZE, status: CellStatus = CellStatus.EMPTY): Board => {
   const cells: Record<string, Cell> = {}
   for (let x = 0; x < size; x++) {
     for (let y = 0; y < size; y++) {
       const index = `${indexToLabel(x)}${y + 1}`
-      cells[index] = { index, x, y, status: CellStatus.EMPTY }
+      cells[index] = { index, x, y, status }
     }
   }
   return { size, cells }

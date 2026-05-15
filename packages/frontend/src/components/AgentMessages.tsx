@@ -34,7 +34,7 @@ const formatElapsed = (ts: number, startedAt: number): string => {
 }
 
 export const AgentMessages = () => {
-  const messages = useSelector(selectAgentMessages()) as MessageValue[MessageType.AGENT][]
+  const messages = useSelector(selectAgentMessages) as MessageValue[MessageType.AGENT][]
   const startedAt = useSelector(selectStartedAt)
 
   return (

@@ -21,7 +21,7 @@ const Title = styled.div`
 `
 
 export const StrategyView = () => {
-  const strategy = useSelector(selectStrategy())
+  const strategy = useSelector(selectStrategy)
 
   return (
     <Container>

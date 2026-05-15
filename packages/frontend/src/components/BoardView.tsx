@@ -3,7 +3,7 @@ import * as Coords from "@battleship/core/coords"
 import React from "react"
 import { useSelector } from "react-redux"
 import styled from "styled-components"
-import { selectBoard } from "../store/game/selectors"
+import { selectAgentBoard } from "../store/game/selectors"
 
 const Grid = styled.div`
     display: grid;
@@ -38,7 +38,7 @@ const Cell = styled.div<{ $status: Board.CellStatus }>`
 `
 
 export const BoardView = () => {
-  const board = useSelector(selectBoard())
+  const board = useSelector(selectAgentBoard)
   const { size, cells } = board
   const cols = Array.from({ length: size }, (_, i) => Coords.indexToLabel(i))
 

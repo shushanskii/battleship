@@ -12,8 +12,8 @@ const Container = styled.div`
 `
 
 export const TokensView = () => {
-  const tokens = useSelector(selectTotalTokens())
-  const llmCalls = useSelector(selectLlmCalls())
+  const tokens = useSelector(selectTotalTokens)
+  const llmCalls = useSelector(selectLlmCalls)
 
   return (
     <Container>

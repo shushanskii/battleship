@@ -30,20 +30,12 @@ export const getModel = (modelName: string) =>
     },
   }).bindTools([defineStrategy, place])
 
-const initTargetBoard = (): Board.Board => {
-  const board = Board.init()
-  for (const cell of Object.values(board.cells)) {
-    cell.status = Board.CellStatus.UNKNOWN
-  }
-  return board
-}
-
 export const BattleshipState = new StateSchema({
   board: new ReducedValue(z.custom<Board.Board>().default(Board.init()), {
     inputSchema: z.custom<Ship.Ship>(),
     reducer: (board: Board.Board, ship: Ship.Ship) => Board.addShip(board, ship),
   }),
-  targetBoard: new ReducedValue(z.custom<Board.Board>().default(initTargetBoard()), {
+  targetBoard: new ReducedValue(z.custom<Board.Board>().default(Board.init(Board.DEFAULT_BOARD_SIZE, Board.CellStatus.UNKNOWN)), {
     inputSchema: z.object({ coordinate: z.string(), hit: z.boolean() }),
     reducer: (board: Board.Board, { coordinate, hit }: { coordinate: string; hit: boolean }) => {
       const next = Board.clone(board)

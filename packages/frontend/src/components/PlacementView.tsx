@@ -3,7 +3,10 @@ import * as Coords from "@battleship/core/coords"
 import * as Ship from "@battleship/core/ship"
 import { ShipDirection } from "@battleship/core/ship"
 import React, { useMemo, useState } from "react"
+import { useDispatch, useSelector } from "react-redux"
 import styled from "styled-components"
+import { placeShipCommand } from "../store/commands/placement"
+import { selectUserBoard } from "../store/game/selectors"
 
 const FLEET = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
 
@@ -89,16 +92,12 @@ const ReadyLabel = styled.div`
 `
 
 export const PlacementView = () => {
-  const [placed, setPlaced] = useState<Ship.Ship[]>([])
+  const dispatch = useDispatch()
+  const board = useSelector(selectUserBoard)
   const [pending, setPending] = useState<number[]>(FLEET)
   const [dragging, setDragging] = useState<{ length: number; direction: ShipDirection } | null>(null)
   const [hoverCell, setHoverCell] = useState<string | null>(null)
   const [direction, setDirection] = useState<ShipDirection>(ShipDirection.HORIZONTAL)
-
-  const board = useMemo(
-    () => placed.reduce((b, ship) => Board.addShip(b, ship), Board.init()),
-    [placed],
-  )
 
   const previewShip = useMemo(() => {
     if (!dragging || !hoverCell) return null
@@ -134,7 +133,7 @@ export const PlacementView = () => {
     if (!dragging) return
     const ship = Ship.init(index, dragging.direction, dragging.length)
     if (!Board.canPlace(board, ship)) return
-    setPlaced((prev) => [...prev, ship])
+    dispatch(placeShipCommand(ship))
     setPending((prev) => {
       const i = prev.indexOf(dragging.length)
       return [...prev.slice(0, i), ...prev.slice(i + 1)]

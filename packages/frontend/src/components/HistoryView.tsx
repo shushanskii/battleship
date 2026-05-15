@@ -27,7 +27,7 @@ const Entry = styled.div`
 `
 
 export const HistoryView = () => {
-  const history = useSelector(selectHistory())
+  const history = useSelector(selectHistory)
 
   return (
     <Container>
