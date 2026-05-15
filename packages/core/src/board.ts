@@ -90,13 +90,15 @@ export const canPlace = (board: Board, ship: Ship): boolean => {
   return forbidden.every((cell) => cell.status !== CellStatus.SHIP)
 }
 
-export const place = (board: Board, ship: Ship): void => {
+export const addShip = (board: Board, ship: Ship): Board => {
   if (!canPlace(board, ship)) {
     throw new Error(`Cannot place ship at ${ship.origin}`)
   }
+  const next = clone(board)
   for (const index of coords(ship)) {
-    setStatus(board, index, CellStatus.SHIP)
+    setStatus(next, index, CellStatus.SHIP)
   }
+  return next
 }
 
 export const print = (board: Board, ships: Ship[] = []): string => {

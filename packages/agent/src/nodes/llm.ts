@@ -46,10 +46,7 @@ Define your strategy for both phases. You MUST call the "defineStrategy" tool.
 export const askToPlace: GraphNode<typeof BattleshipState> = async (state, config) => {
     config?.writer && config.writer({ agent: "Place ship" })
 
-    const board = Board.init()
-    for (const ship of state.ships) {
-        Board.place(board, ship)
-    }
+    const board = state.board
 
     const model = getModel(config?.configurable?.modelName as string)
     const response = await model
@@ -76,7 +73,7 @@ Example: "Top-right corner J1-J3, vertical. Keeps fleet spread to edges, far fro
     `),
             new HumanMessage(`
 Current battleground (S = ship):
-${Board.print(board, state.ships)}
+${Board.print(board)}
 
 Placement history:
 ${state.history.length > 0 ? state.history.join('\n') : '(none yet)'}

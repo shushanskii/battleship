@@ -40,7 +40,8 @@ const initTargetBoard = (): Board.Board => {
 
 export const BattleshipState = new StateSchema({
   board: new ReducedValue(z.custom<Board.Board>().default(Board.init()), {
-    reducer: (_, next) => next,
+    inputSchema: z.custom<Ship.Ship>(),
+    reducer: (board: Board.Board, ship: Ship.Ship) => Board.addShip(board, ship),
   }),
   targetBoard: new ReducedValue(z.custom<Board.Board>().default(initTargetBoard()), {
     inputSchema: z.object({ coordinate: z.string(), hit: z.boolean() }),
@@ -49,10 +50,6 @@ export const BattleshipState = new StateSchema({
       Board.setStatus(next, coordinate, hit ? Board.CellStatus.HIT : Board.CellStatus.MISS)
       return next
     },
-  }),
-  ships: new ReducedValue(z.custom<Ship.Ship[]>().default([]), {
-    inputSchema: z.custom<Ship.Ship>(),
-    reducer: (current: Ship.Ship[], placed: Ship.Ship) => [...current, placed],
   }),
   unplacedShips: new ReducedValue(
     z.array(z.number()).default([4, 3, 3, 2, 2, 2, 1, 1, 1, 1]),
@@ -100,11 +97,8 @@ const toolNode: GraphNode<typeof BattleshipState> = async (state, config) => {
     }
     const ship = Ship.init(origin, direction, size)
 
-    const board = Board.clone(state.board)
-    Board.place(board, ship)
-
     config?.writer && config.writer({ agent: "Ship placed" })
-    return { board, ships: ship, unplacedShips: size, history: `size ${size}, ${origin}, ${direction} — ${description}` }
+    return { board: ship, unplacedShips: size, history: `size ${size}, ${origin}, ${direction} — ${description}` }
   }
 
   if (toolCall.name === defineStrategy.name) {

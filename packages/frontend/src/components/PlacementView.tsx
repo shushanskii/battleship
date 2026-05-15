@@ -95,11 +95,10 @@ export const PlacementView = () => {
   const [hoverCell, setHoverCell] = useState<string | null>(null)
   const [direction, setDirection] = useState<ShipDirection>(ShipDirection.HORIZONTAL)
 
-  const board = useMemo(() => {
-    const b = Board.init()
-    for (const ship of placed) Board.place(b, ship)
-    return b
-  }, [placed])
+  const board = useMemo(
+    () => placed.reduce((b, ship) => Board.addShip(b, ship), Board.init()),
+    [placed],
+  )
 
   const previewShip = useMemo(() => {
     if (!dragging || !hoverCell) return null
