@@ -1,8 +1,9 @@
-import { type WireMessage } from "@battleship/core"
+import { MessageType, type WireMessage } from "@battleship/core"
 import { END, eventChannel } from "redux-saga"
 import { call, fork, put, take, takeLatest } from "redux-saga/effects"
 import { receiveMessage, sendAnswer, startNewSession } from "./slice"
 import { SessionCommands } from "../commands/sessions"
+import { ShootingCommands } from "../commands/shooting"
 
 function createWsChannel(ws: WebSocket) {
   return eventChannel<WireMessage>((emit) => {
@@ -29,6 +30,14 @@ function* watchOutgoing(ws: WebSocket, model: string): Generator {
   }
 }
 
+function* watchShoot(ws: WebSocket): Generator {
+  while (true) {
+    const { payload } = yield take(ShootingCommands.SHOOT)
+    console.log('watchShoot', payload)
+    ws.send(JSON.stringify({ type: MessageType.SHOOT, payload }))
+  }
+}
+
 function* connectModel(id: string, model: string): Generator {
   const ws = new WebSocket(`ws://192.168.0.103:3002?id=${id}&model=${model}`)
   yield call(
@@ -39,6 +48,7 @@ function* connectModel(id: string, model: string): Generator {
   )
   yield fork(watchIncoming, ws, model)
   yield fork(watchOutgoing, ws, model)
+  yield fork(watchShoot, ws)
 }
 
 function* newSessionSaga(): Generator {

@@ -42,6 +42,8 @@ const runStream = async (agent: any, id: string, modelName: string, input: any =
           const value = i.value as Interrupt
           if (value.type === InterruptType.READY) {
             send(MessageType.READY, null)
+          } else if (value.type === InterruptType.SHOT) {
+            send(MessageType.SHOOT, { coordinate: value.payload.coordinate })
           } else {
             send(MessageType.QUESTION, i.value)
           }
@@ -65,7 +67,13 @@ const runStream = async (agent: any, id: string, modelName: string, input: any =
     }
 
     if (mode === "custom") {
-      send(MessageType.AGENT, { text: chunk.agent, ts: Date.now() })
+      if (chunk.agent) {
+        send(MessageType.AGENT, { text: chunk.agent, ts: Date.now() })
+      }
+      if (chunk.shot) {
+        console.log(chunk)
+        send(MessageType.SHOOT, chunk.shot)
+      }
     }
   }
 }
@@ -74,36 +82,36 @@ export const setupChannel = (sessions: Map<string, any>) => {
   wss.on("connection", (ws, req) => {
     const url = new URL(req.url!, "http://localhost")
     const id = url.searchParams.get("id")
-    const modelName = url.searchParams.get("model")
+    const model = url.searchParams.get("model")
 
-    if (!id || !modelName) {
+    if (!id || !model) {
       ws.close()
       return
     }
 
     const agents: Record<string, any> = sessions.get(id)
-    if (!agents || !agents[modelName]) {
+    if (!agents || !agents[model]) {
       ws.close()
       return
     }
 
-    connections.set(`${id}:${modelName}`, ws)
+    connections.set(`${id}:${model}`, ws)
 
-    runStream(agents[modelName], id, modelName)
+    runStream(agents[model], id, model)
 
     ws.on("message", (raw: Buffer) => {
       try {
-        const { type, payload } = JSON.parse(raw.toString())
-        if (type === "answer") {
-          runStream(agents[modelName], id, modelName, new Command({ resume: payload }))
-        }
+        const message = JSON.parse(raw.toString())
+        
+        runStream(agents[model], id, model, new Command({ resume: message }))
+      
       } catch (_e) {
-        console.error(`[${id}:${modelName}] invalid message:`, raw.toString())
+        console.error(`[${id}:${model}] invalid message:`, raw.toString())
       }
     })
 
     ws.on("close", () => {
-      connections.delete(`${id}:${modelName}`)
+      connections.delete(`${id}:${model}`)
     })
   })
 }

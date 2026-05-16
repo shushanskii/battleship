@@ -47,7 +47,15 @@ const sessionsSlice = createSlice({
       { payload: { model, type, payload } }: PayloadAction<{ model: string; type: MessageType; payload: ModelMessage }>,
     ) => {
       if (!state.id) return
-      const { agents } = state.data[state.id]
+      const session = state.data[state.id]
+
+      if (type === MessageType.SHOOT) {
+        const { coordinate, hit } = payload as { coordinate: string; hit: boolean }
+        session.user.targetBoard = Board.setStatus(session.user.targetBoard, coordinate, hit ? Board.CellStatus.HIT : Board.CellStatus.MISS)
+        return
+      }
+
+      const { agents } = session
       if (!agents[model]) {
         agents[model] = {}
       }

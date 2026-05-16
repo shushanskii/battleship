@@ -48,14 +48,12 @@ export const get = (board: Board, index: string): Cell | undefined =>
 export const at = (board: Board, x: number, y: number): Cell | undefined =>
   board.cells[`${indexToLabel(x)}${y + 1}`]
 
-export const setStatus = (
-  board: Board,
-  index: string,
-  status: CellStatus,
-): void => {
-  if (board.cells[index]) {
-    board.cells[index].status = status
+export const setStatus = (board: Board, index: string, status: CellStatus): Board => {
+  const next = clone(board)
+  if (next.cells[index]) {
+    next.cells[index].status = status
   }
+  return next
 }
 
 export const clone = (board: Board): Board => ({
@@ -94,23 +92,15 @@ export const addShip = (board: Board, ship: Ship): Board => {
   if (!canPlace(board, ship)) {
     throw new Error(`Cannot place ship at ${ship.origin}`)
   }
-  const next = clone(board)
-  for (const index of coords(ship)) {
-    setStatus(next, index, CellStatus.SHIP)
-  }
-  return next
+  return coords(ship).reduce((b, index) => setStatus(b, index, CellStatus.SHIP), board)
 }
 
 export const print = (board: Board, ships: Ship[] = []): string => {
-  const snapshot = clone(board)
+  let snapshot = board
   for (const ship of ships) {
-    coords(ship).forEach((index, deckIndex) => {
-      setStatus(
-        snapshot,
-        index,
-        ship.hits.includes(deckIndex) ? CellStatus.HIT : CellStatus.SHIP,
-      )
-    })
+    for (const [deckIndex, index] of coords(ship).entries()) {
+      snapshot = setStatus(snapshot, index, ship.hits.includes(deckIndex) ? CellStatus.HIT : CellStatus.SHIP)
+    }
   }
 
   const colLabels = Array.from({ length: board.size }, (_, x) =>

@@ -13,6 +13,15 @@ export const defineStrategy = tool(
   },
 )
 
+export const shoot = tool(({ coordinate }) => coordinate, {
+  name: "shoot",
+  description: "Fire at a coordinate on the opponent's grid",
+  schema: z.object({
+    coordinate: z.string().describe("Target coordinate, e.g. A5 or J10"),
+    reasoning: z.string().describe("Why you chose this coordinate based on your strategy"),
+  }),
+})
+
 export const place = tool(({ origin, direction, size }) => ({ origin, direction, size }), {
   name: "place",
   description: "Place a ship on the battleground",

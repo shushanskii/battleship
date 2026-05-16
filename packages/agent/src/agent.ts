@@ -15,36 +15,40 @@ import {
   StateGraph,
   StateSchema,
 } from "@langchain/langgraph"
-import { InterruptType } from "@battleship/core"
+import { InterruptType, MessageType } from "@battleship/core"
 import { ChatOpenAI } from "@langchain/openai"
 import * as z from "zod"
-import { askForStrategy, askToPlace } from "./nodes/llm"
+import { agentShootNode, askForStrategy, askToPlace } from "./nodes/llm"
 import { defineStrategy, place } from "./tools"
 
-export const getModel = (modelName: string) =>
+export const getModel = (modelName: string, tools: any[] = [defineStrategy, place]) =>
   new ChatOpenAI({
     apiKey: "some-key",
     model: modelName,
     configuration: {
       baseURL: "http://192.168.0.36:1234/v1",
     },
-  }).bindTools([defineStrategy, place])
+  }).bindTools(tools)
 
 export const BattleshipState = new StateSchema({
   board: new ReducedValue(z.custom<Board.Board>().default(Board.init()), {
-    inputSchema: z.custom<Ship.Ship>(),
-    reducer: (board: Board.Board, ship: Ship.Ship) => Board.addShip(board, ship),
+    inputSchema: z.any(),
+    reducer: (board: Board.Board, input: Ship.Ship | { coordinate: string; hit: boolean }) => {
+      if ('origin' in input) {
+        return Board.addShip(board, input as Ship.Ship)
+      }
+      const { coordinate, hit } = input as { coordinate: string; hit: boolean }
+      return Board.setStatus(board, coordinate, hit ? Board.CellStatus.HIT : Board.CellStatus.MISS)
+    },
   }),
   targetBoard: new ReducedValue(z.custom<Board.Board>().default(Board.init(Board.DEFAULT_BOARD_SIZE, Board.CellStatus.UNKNOWN)), {
     inputSchema: z.object({ coordinate: z.string(), hit: z.boolean() }),
-    reducer: (board: Board.Board, { coordinate, hit }: { coordinate: string; hit: boolean }) => {
-      const next = Board.clone(board)
-      Board.setStatus(next, coordinate, hit ? Board.CellStatus.HIT : Board.CellStatus.MISS)
-      return next
-    },
+    reducer: (board: Board.Board, { coordinate, hit }: { coordinate: string; hit: boolean }) =>
+      Board.setStatus(board, coordinate, hit ? Board.CellStatus.HIT : Board.CellStatus.MISS),
   }),
   unplacedShips: new ReducedValue(
-    z.array(z.number()).default([4, 3, 3, 2, 2, 2, 1, 1, 1, 1]),
+    z.array(z.number()).default([4]),
+    // z.array(z.number()).default([4, 3, 3, 2, 2, 2, 1, 1, 1, 1]),
     {
       inputSchema: z.number(),
       reducer: (current: number[], removed: number) => {
@@ -144,12 +148,19 @@ const routeAfterTool: ConditionalEdgeRouter<typeof BattleshipState, any> = (stat
   if (state.unplacedShips.length > 0) {
     return "askToPlace"
   }
-  return "awaitTurnNode"
+  return "awaitUserShotNode"
 }
 
-const awaitTurnNode: GraphNode<typeof BattleshipState> = async (_state, config) => {
-  config?.writer && config.writer({ agent: "Fleet ready" })
-  interrupt({ type: InterruptType.READY, payload: null })
+const awaitUserShotNode: GraphNode<typeof BattleshipState> = async (state, config) => {
+  const { type, payload } = interrupt({ type: InterruptType.READY, payload: null })
+
+  if (type === MessageType.SHOOT) {
+    const hit = state.board.cells[payload]?.status === Board.CellStatus.SHIP
+    config?.writer && config.writer({ shot: { coordinate: payload, hit } })
+    return { board: { coordinate: payload, hit } }
+  }
+
+
   return {}
 }
 
@@ -158,10 +169,12 @@ export const newAgent = () =>
     .addNode("askForStrategy", askForStrategy)
     .addNode("askToPlace", askToPlace)
     .addNode("toolNode", toolNode)
-    .addNode("awaitTurnNode", awaitTurnNode)
+    .addNode("awaitUserShotNode", awaitUserShotNode)
+    .addNode("agentShootNode", agentShootNode)
     .addEdge(START, "askForStrategy")
     .addEdge("askForStrategy", "toolNode")
-    .addEdge("awaitTurnNode", END)
+    .addEdge("awaitUserShotNode", "agentShootNode")
+    .addEdge("agentShootNode", "awaitUserShotNode")
     .addConditionalEdges("askToPlace", shouldPlace, ["toolNode", "askToPlace", END])
-    .addConditionalEdges("toolNode", routeAfterTool, ["askToPlace", "awaitTurnNode"])
+    .addConditionalEdges("toolNode", routeAfterTool, ["askToPlace", "awaitUserShotNode"])
     .compile({ checkpointer: new MemorySaver() })

@@ -1,7 +1,9 @@
 import * as Board from "@battleship/core/board"
-import { GraphNode } from "@langchain/langgraph"
+import { InterruptType } from "@battleship/core"
+import { GraphNode, interrupt } from "@langchain/langgraph"
 import { HumanMessage, SystemMessage } from "langchain"
 import { BattleshipState, getModel } from "../agent"
+import { shoot } from "../tools"
 
 export const askForStrategy: GraphNode<typeof BattleshipState> = async (state, config) => {
     config?.writer && config.writer({ agent: "Define strategy" })
@@ -85,6 +87,48 @@ Choose which ship to place next according to your strategy and specify its posit
         ])
     return {
         messages: [response],
+        llmCalls: 1,
+    }
+}
+
+export const agentShootNode: GraphNode<typeof BattleshipState> = async (state, config) => {
+    config?.writer && config.writer({ agent: "Choosing target" })
+
+//     const model = getModel(config?.configurable?.modelName as string, [shoot])
+//     const response = await model.invoke([
+//         new SystemMessage(`
+// You are playing Battleship. It is your turn to fire at the opponent's fleet.
+// Grid: columns A–J, rows 1–10. Coordinate format: column + row (e.g. A1, J10).
+
+// ## Your strategy
+// ${state.strategy}
+
+// ## Target grid (your shots so far)
+// ${Board.print(state.targetBoard)}
+
+// Rules:
+// - Only shoot at unknown cells
+// - Follow your strategy's search pattern
+// - Never repeat a coordinate
+//         `),
+//         new HumanMessage(`Choose your next shot. You MUST call the "shoot" tool.`),
+//     ])
+
+//     const toolCall = response.tool_calls?.[0]
+//     if (!toolCall || toolCall.name !== shoot.name) {
+//         return { messages: [response], llmCalls: 1 }
+//     }
+
+//     const { coordinate } = toolCall.args as { coordinate: string }
+
+//     const result = interrupt({ type: InterruptType.SHOT, payload: { coordinate } }) as { hit: boolean }
+
+//     config?.writer && config.writer({
+//         agent: result.hit ? `Hit at ${coordinate}!` : `Miss at ${coordinate}`,
+//     })
+
+    return {
+        messages: [],
         llmCalls: 1,
     }
 }

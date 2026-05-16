@@ -19,12 +19,26 @@ export const selectUserBoard = createSelector([selectId, selectData], (id, data)
   return data[id].user.board
 })
 
+export const selectUserTargetBoard = createSelector([selectId, selectData], (id, data): Board.Board => {
+  if (!id || !data[id]) return Board.init(Board.DEFAULT_BOARD_SIZE, Board.CellStatus.UNKNOWN)
+  return data[id].user.targetBoard
+})
+
 export const selectAgentBoard = createSelector(
   selectAgentSession,
   (data): MessageValue[MessageType.BOARD] => {
     const boards = data[MessageType.BOARD]
     const last = boards?.[boards.length - 1] as MessageValue[MessageType.BOARD] | undefined
     return last ?? Board.init()
+  },
+)
+
+export const selectAgentTargetBoard = createSelector(
+  selectAgentSession,
+  (data): Board.Board => {
+    const boards = data[MessageType.TARGET_BOARD]
+    const last = boards?.[boards.length - 1] as Board.Board | undefined
+    return last ?? Board.init(Board.DEFAULT_BOARD_SIZE, Board.CellStatus.UNKNOWN)
   },
 )
 
@@ -54,4 +68,8 @@ export const selectLlmCalls = createSelector(selectAgentSession, (session): numb
 export const selectStrategy = createSelector(selectAgentSession, (session): string => {
   const strategy = session[MessageType.STRATEGY]
   return strategy ? (strategy[strategy.length - 1] as string) : ""
+})
+
+export const selectAgentReady = createSelector(selectAgentSession, (session): boolean => {
+  return !!session[MessageType.READY]?.length
 })

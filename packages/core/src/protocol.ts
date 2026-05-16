@@ -10,6 +10,7 @@ export enum MessageType {
   STRATEGY = "strategy",
   READY = "ready",
   TARGET_BOARD = "targetBoard",
+  SHOOT = "shoot",
 }
 
 export type MessageValue = {
@@ -22,6 +23,7 @@ export type MessageValue = {
   [MessageType.STRATEGY]: string
   [MessageType.READY]: null
   [MessageType.TARGET_BOARD]: Board
+  [MessageType.SHOOT]: { coordinate: string; hit?: boolean }
 }
 
 export type WireMessage = {
