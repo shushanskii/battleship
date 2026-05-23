@@ -1,11 +1,11 @@
 export enum ClientActions {
-  SET_CURRENT_SESSION = "CLIENT:SET_CURRENT_SESSION",
+  GET_CURRENT_SESSION = "CLIENT:GET_CURRENT_SESSION",
   SET_ERROR = "CLIENT:SET_ERROR",
   RESET_ERROR = "CLIENT:RESET_ERROR",
 }
 
-export const setCurrentSession = (id: string | null) => ({
-  type: ClientActions.SET_CURRENT_SESSION,
+export const getCurrentSession = (id: string) => ({
+  type: ClientActions.GET_CURRENT_SESSION,
   payload: id,
 })
 
@@ -20,12 +20,18 @@ export const resetError = () => ({
 
 export enum SessionActions {
   FETCH = "SESSIONS:FETCH",
+  FETCH_ALL = "SESSIONS:FETCH_ALL",
   CREATE = "SESSIONS:CREATE",
   DELETE = "SESSIONS:DELETE",
 }
 
-export const fetchSessions = () => ({
+export const fetchSession = (id: string) => ({
   type: SessionActions.FETCH,
+  payload: id,
+})
+
+export const fetchSessions = () => ({
+  type: SessionActions.FETCH_ALL,
 })
 
 export const createSession = () => ({
