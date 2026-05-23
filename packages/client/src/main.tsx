@@ -6,6 +6,7 @@ import { store } from './store'
 import { Home } from './pages/Home'
 import { Sessions } from './pages/Sessions'
 import { Session } from './pages/Session'
+import { ErrorNotification } from './components/ErrorNotification'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -17,6 +18,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/session/:id" element={<Session />} />
         </Routes>
       </BrowserRouter>
+      <ErrorNotification />
     </Provider>
   </StrictMode>,
 )

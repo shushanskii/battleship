@@ -2,20 +2,20 @@ import { useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import styled from 'styled-components'
-import { fetchSessions } from '../actions'
-import { selectSession } from '../selectors'
-import type { AppDispatch, RootState } from '../store'
+import { setCurrentSession } from '../actions'
+import { selectCurrentSession } from '../selectors'
+import type { AppDispatch } from '../store'
 
 export const Session = () => {
   const { id } = useParams<{ id: string }>()
   const dispatch = useDispatch<AppDispatch>()
-  const session = useSelector((state: RootState) => selectSession(id!)(state))
+  const session = useSelector(selectCurrentSession)
 
   useEffect(() => {
-    if (!session) {
-      dispatch(fetchSessions())
+    if (id) {
+      dispatch(setCurrentSession(id))
     }
-  }, [dispatch, session])
+  }, [id])
 
   return (
     <Page>

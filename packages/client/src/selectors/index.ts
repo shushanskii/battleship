@@ -16,3 +16,13 @@ export const selectLastSession = createSelector(
   selectSessions,
   (sessions): Session | undefined => sessions[sessions.length - 1],
 )
+
+export const selectCurrentSession = createSelector(
+  [
+    (state: RootState) => state.client,
+    selectSessionsMap
+  ],
+  (client, sessions) => client.currentSession ? sessions[client.currentSession] : undefined,
+)
+
+export const selectError = (state: RootState) => state.client.error
