@@ -1,14 +1,16 @@
 import { WebSocketServer } from 'ws'
 import type { IncomingMessage, Server } from 'http'
 import * as sessionStore from '../sessions/store'
-import type { Connection, Role } from './types'
+import { PLAYER_HUMAN, PLAYER_AGENT } from '@battleship/core/session'
+import type { Connection } from './types'
 
+const VALID_USER_IDS = [PLAYER_HUMAN, PLAYER_AGENT]
 const connections = new Map<string, Connection>()
 
-const key = (sessionId: string, role: Role) => `${sessionId}:${role}`
+const key = (sessionId: string, userId: string) => `${sessionId}:${userId}`
 
-export const get = (sessionId: string, role: Role) =>
-  connections.get(key(sessionId, role))
+export const get = (sessionId: string, userId: string): Connection | undefined =>
+  connections.get(key(sessionId, userId))
 
 export const setupWebSocket = (server: Server) => {
   const wss = new WebSocketServer({ server })
@@ -16,10 +18,10 @@ export const setupWebSocket = (server: Server) => {
   wss.on('connection', (ws, req: IncomingMessage) => {
     const url = new URL(req.url!, 'http://localhost')
     const sessionId = url.searchParams.get('id')
-    const role = url.searchParams.get('role') as Role | null
+    const userId = url.searchParams.get('userId')
 
-    if (!sessionId || !role || (role !== 'player' && role !== 'agent')) {
-      ws.close(1008, 'Missing or invalid id/role')
+    if (!sessionId || !userId || !VALID_USER_IDS.includes(userId)) {
+      ws.close(1008, 'Missing or invalid id/userId')
       return
     }
 
@@ -29,21 +31,21 @@ export const setupWebSocket = (server: Server) => {
       return
     }
 
-    if (connections.has(key(sessionId, role))) {
-      ws.close(1008, 'Role already connected')
+    if (connections.has(key(sessionId, userId))) {
+      ws.close(1008, 'User already connected')
       return
     }
 
-    connections.set(key(sessionId, role), { ws, sessionId, role })
-    console.log(`[${sessionId}] ${role} connected`)
+    connections.set(key(sessionId, userId), { ws, sessionId, userId })
+    console.log(`[${sessionId}] ${userId} connected`)
 
     ws.on('message', (raw) => {
-      console.log(`[${sessionId}:${role}]`, raw.toString())
+      console.log(`[${sessionId}:${userId}]`, raw.toString())
     })
 
     ws.on('close', () => {
-      connections.delete(key(sessionId, role))
-      console.log(`[${sessionId}] ${role} disconnected`)
+      connections.delete(key(sessionId, userId))
+      console.log(`[${sessionId}] ${userId} disconnected`)
     })
   })
 }

@@ -41,7 +41,6 @@ export const Sessions = () => {
             {sessions.map((s) => (
               <tr key={s.id}>
                 <Td><Link to={`/session/${s.id}`}>{s.id}</Link></Td>
-                <Td>{s.phase}</Td>
                 <Td>{new Date(s.createdAt).toLocaleString()}</Td>
                 <Td><DeleteButton onClick={() => handleDelete(s.id)}>Delete</DeleteButton></Td>
               </tr>

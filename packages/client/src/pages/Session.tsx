@@ -32,7 +32,7 @@ export const Session = () => {
     <Page>
       <Link to="/">← Home</Link>
       <h1>Game</h1>
-      <p>Session: {session.id} — {session.phase}</p>
+      <p>Session: {session.id}</p>
       <PlacementView onReady={handleReady} />
     </Page>
   )
