@@ -1,24 +1,36 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
 import styled from 'styled-components'
-import { fetchSessions, createSession, deleteSession, type Session } from '../api'
+import { fetchSessions, createSession, deleteSession } from '../actions'
+import { selectSessions, selectLastSession } from '../selectors'
+import type { AppDispatch } from '../store'
 
 export const Home = () => {
+  const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
-  const [sessions, setSessions] = useState<Session[]>([])
+  const sessions = useSelector(selectSessions)
+  const lastSession = useSelector(selectLastSession)
+  const prevLengthRef = useRef(sessions.length)
 
-  const load = () => fetchSessions().then(setSessions)
+  useEffect(() => {
+    dispatch(fetchSessions())
+  }, [dispatch])
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    if (sessions.length > prevLengthRef.current && lastSession) {
+      navigate(`/session/${lastSession.id}`)
+    }
+    prevLengthRef.current = sessions.length
+  }, [sessions, lastSession, navigate])
 
-  const handleNew = async () => {
-    const session = await createSession()
-    navigate(`/session/${session.id}`)
+  const handleNew = () => {
+    prevLengthRef.current = sessions.length
+    dispatch(createSession())
   }
 
-  const handleDelete = async (id: string) => {
-    await deleteSession(id)
-    load()
+  const handleDelete = (id: string) => () => {
+    dispatch(deleteSession(id))
   }
 
   return (
@@ -26,7 +38,7 @@ export const Home = () => {
       <h1>Battleship</h1>
       <NewButton onClick={handleNew}>New Game</NewButton>
 
-      {sessions.length > 0 && (
+      {sessions.length  && (
         <>
           <h2>Sessions</h2>
           <List>
@@ -34,7 +46,7 @@ export const Home = () => {
               <Item key={s.id}>
                 <Link to={`/session/${s.id}`}>{s.id}</Link>
                 <Phase>{s.phase}</Phase>
-                <DeleteButton onClick={() => handleDelete(s.id)}>Delete</DeleteButton>
+                <DeleteButton onClick={handleDelete(s.id)}>Delete</DeleteButton>
               </Item>
             ))}
           </List>

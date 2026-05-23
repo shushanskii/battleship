@@ -1,10 +1,8 @@
-const BASE = 'http://192.168.0.103:3001'
+import type { Session } from '@battleship/core/session'
 
-export type Session = {
-  id: string
-  phase: 'waiting' | 'placement' | 'playing' | 'finished'
-  createdAt: number
-}
+export type { Session }
+
+const BASE = 'http://192.168.0.103:3001'
 
 export const fetchSessions = (): Promise<Session[]> =>
   fetch(`${BASE}/sessions`).then((r) => r.json())

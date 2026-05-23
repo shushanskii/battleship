@@ -1,5 +1,5 @@
 import db from './index'
-import type { Session } from '../sessions/types'
+import type { Session } from '@battleship/core/session'
 
 type SessionRow = {
   id: string

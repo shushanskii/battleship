@@ -8,13 +8,15 @@
     ".": "./src/index.ts",
     "./board": "./src/board.ts",
     "./ship": "./src/ship.ts",
-    "./coords": "./src/coords.ts"
+    "./coords": "./src/coords.ts",
+    "./session": "./src/session.ts"
   },
   "typesVersions": {
     "*": {
       "board": ["src/board.ts"],
       "ship": ["src/ship.ts"],
-      "coords": ["src/coords.ts"]
+      "coords": ["src/coords.ts"],
+      "session": ["src/session.ts"]
     }
   }
 }

@@ -1,18 +1,21 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
 import styled from 'styled-components'
-import { fetchSessions, deleteSession, type Session } from '../api'
+import { fetchSessions, deleteSession } from '../actions'
+import { selectSessions } from '../selectors'
+import type { AppDispatch } from '../store'
 
 export const Sessions = () => {
-  const [sessions, setSessions] = useState<Session[]>([])
+  const dispatch = useDispatch<AppDispatch>()
+  const sessions = useSelector(selectSessions)
 
-  const load = () => fetchSessions().then(setSessions)
+  useEffect(() => {
+    dispatch(fetchSessions())
+  }, [])
 
-  useEffect(() => { load() }, [])
-
-  const handleDelete = async (id: string) => {
-    await deleteSession(id)
-    load()
+  const handleDelete = (id: string) => {
+    dispatch(deleteSession(id))
   }
 
   return (

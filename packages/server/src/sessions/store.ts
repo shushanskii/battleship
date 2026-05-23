@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
 import * as db from '../db/sessions'
-import type { Session } from './types'
+import type { Session } from '@battleship/core/session'
 
 export const create = (): Session =>
   db.insert({ id: uuidv4(), phase: 'waiting', createdAt: Date.now() })
