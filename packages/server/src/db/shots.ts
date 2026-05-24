@@ -1,4 +1,7 @@
 import db from './index'
+import type { Shot } from '@battleship/core/game'
+
+export type { Shot }
 
 type ShotRow = {
   id: number
@@ -6,14 +9,6 @@ type ShotRow = {
   user_id: string
   cell_index: string
   created_at: number
-}
-
-export type Shot = {
-  id: number
-  sessionId: string
-  userId: string
-  cellIndex: string
-  createdAt: number
 }
 
 const toShot = (row: ShotRow): Shot => ({

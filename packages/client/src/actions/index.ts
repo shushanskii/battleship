@@ -1,11 +1,11 @@
 export enum ClientActions {
-  GET_CURRENT_SESSION = "CLIENT:GET_CURRENT_SESSION",
-  SET_ERROR = "CLIENT:SET_ERROR",
-  RESET_ERROR = "CLIENT:RESET_ERROR",
+  GET_CURRENT_GAME = 'CLIENT:GET_CURRENT_GAME',
+  SET_ERROR = 'CLIENT:SET_ERROR',
+  RESET_ERROR = 'CLIENT:RESET_ERROR',
 }
 
-export const getCurrentSession = (id: string) => ({
-  type: ClientActions.GET_CURRENT_SESSION,
+export const getCurrentGame = (id: string) => ({
+  type: ClientActions.GET_CURRENT_GAME,
   payload: id,
 })
 
@@ -18,27 +18,27 @@ export const resetError = () => ({
   type: ClientActions.RESET_ERROR,
 })
 
-export enum SessionActions {
-  FETCH = "SESSIONS:FETCH",
-  FETCH_ALL = "SESSIONS:FETCH_ALL",
-  CREATE = "SESSIONS:CREATE",
-  DELETE = "SESSIONS:DELETE",
+export enum GameActions {
+  FETCH = 'GAMES:FETCH',
+  FETCH_ALL = 'GAMES:FETCH_ALL',
+  CREATE = 'GAMES:CREATE',
+  DELETE = 'GAMES:DELETE',
 }
 
-export const fetchSession = (id: string) => ({
-  type: SessionActions.FETCH,
+export const fetchGame = (id: string) => ({
+  type: GameActions.FETCH,
   payload: id,
 })
 
-export const fetchSessions = () => ({
-  type: SessionActions.FETCH_ALL,
+export const fetchGames = () => ({
+  type: GameActions.FETCH_ALL,
 })
 
-export const createSession = () => ({
-  type: SessionActions.CREATE,
+export const createGame = () => ({
+  type: GameActions.CREATE,
 })
 
-export const deleteSession = (id: string) => ({
-  type: SessionActions.DELETE,
+export const deleteGame = (id: string) => ({
+  type: GameActions.DELETE,
   payload: id,
 })

@@ -1,43 +1,48 @@
-import type { Session } from '@battleship/core/session'
+import { PLAYER_HUMAN } from '@battleship/core/session'
+import type { GameView, Shot } from '@battleship/core/game'
 
-export type { Session }
+export type { Shot, GameView }
 
 const BASE = 'http://192.168.0.103:3001'
 
-export const fetchSessions = async (): Promise<Session[]> => {
+export const fetchGames = async (): Promise<Record<string, GameView>> => {
   try {
-    const response = await fetch(`${BASE}/sessions`)
+    const response = await fetch(`${BASE}/games?userId=${PLAYER_HUMAN}`)
     return response.json()
   } catch (error) {
     throw error instanceof Error ? error : new Error(String(error))
   }
 }
 
-export const createSession = async (): Promise<Session> => {
+export const createGame = async (): Promise<GameView> => {
   try {
-    const response = await fetch(`${BASE}/sessions`, { method: 'POST' })
+    const response = await fetch(`${BASE}/games`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: PLAYER_HUMAN }),
+    })
     return response.json()
   } catch (error) {
     throw error instanceof Error ? error : new Error(String(error))
   }
 }
 
-export const fetchSession = async (id: string): Promise<Session> => {
+export const fetchGame = async (id: string): Promise<GameView> => {
   try {
-    const response = await fetch(`${BASE}/sessions/${id}`)
+    const response = await fetch(`${BASE}/games/${id}?userId=${PLAYER_HUMAN}`)
     const data = await response.json()
     if (data.error) {
       throw new Error(data.error)
     }
-    return data as Session
+    return data as GameView
   } catch (error) {
     throw error instanceof Error ? error : new Error(String(error))
   }
 }
 
-export const deleteSession = async (id: string): Promise<void> => {
+export const deleteGame = async (id: string): Promise<void> => {
   try {
-    await fetch(`${BASE}/sessions/${id}`, { method: 'DELETE' })
+    await fetch(`${BASE}/games/${id}`, { method: 'DELETE' })
   } catch (error) {
     throw error instanceof Error ? error : new Error(String(error))
   }

@@ -2,21 +2,21 @@ import { useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import styled from 'styled-components'
-import { getCurrentSession } from '../actions'
-import { selectCurrentSession } from '../selectors'
+import { getCurrentGame } from '../actions'
+import { selectCurrentGame } from '../selectors'
 import { PlacementView } from '../components/PlacementView'
 import { Loading } from '../components/Loading'
 import type { AppDispatch } from '../store'
 import type { Board } from '@battleship/core/board'
 
-export const Session = () => {
+export const Game = () => {
   const { id } = useParams<{ id: string }>()
   const dispatch = useDispatch<AppDispatch>()
-  const session = useSelector(selectCurrentSession)
+  const game = useSelector(selectCurrentGame)
 
   useEffect(() => {
     if (id) {
-      dispatch(getCurrentSession(id))
+      dispatch(getCurrentGame(id))
     }
   }, [id])
 
@@ -24,7 +24,7 @@ export const Session = () => {
     console.log('Fleet placed', board)
   }
 
-  if (!session) {
+  if (!game) {
     return <Loading />
   }
 
@@ -32,7 +32,7 @@ export const Session = () => {
     <Page>
       <Link to="/">← Home</Link>
       <h1>Game</h1>
-      <p>Session: {session.id}</p>
+      <p>Session: {game.session.id}</p>
       <PlacementView onReady={handleReady} />
     </Page>
   )

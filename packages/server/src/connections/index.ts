@@ -1,6 +1,6 @@
 import { WebSocketServer } from 'ws'
 import type { IncomingMessage, Server } from 'http'
-import * as sessionStore from '../sessions/store'
+import * as gameStore from '../games/store'
 import { PLAYER_HUMAN, PLAYER_AGENT } from '@battleship/core/session'
 import type { Connection } from './types'
 
@@ -25,9 +25,9 @@ export const setupWebSocket = (server: Server) => {
       return
     }
 
-    const session = sessionStore.getById(sessionId)
-    if (!session) {
-      ws.close(1008, 'Session not found')
+    const game = gameStore.getById(sessionId)
+    if (!game) {
+      ws.close(1008, 'Game not found')
       return
     }
 

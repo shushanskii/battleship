@@ -1,7 +1,7 @@
 import { all } from 'redux-saga/effects'
-import { sessionsSaga } from './sessions'
+import { gamesSaga } from './games'
 import { clientSaga } from './client'
 
 export function* rootSaga() {
-  yield all([sessionsSaga(), clientSaga()])
+  yield all([gamesSaga(), clientSaga()])
 }

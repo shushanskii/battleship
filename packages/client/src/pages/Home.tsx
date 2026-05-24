@@ -1,25 +1,25 @@
 import { useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import styled from 'styled-components'
-import { fetchSessions, createSession, deleteSession } from '../actions'
-import { selectSessions } from '../selectors'
+import { fetchGames, createGame, deleteGame } from '../actions'
+import { selectGames } from '../selectors'
 import type { AppDispatch } from '../store'
 
 export const Home = () => {
   const dispatch = useDispatch<AppDispatch>()
-  const sessions = useSelector(selectSessions)
+  const games = useSelector(selectGames)
 
   useEffect(() => {
-    dispatch(fetchSessions())
-  }, [dispatch])
+    dispatch(fetchGames())
+  }, [])
 
   const handleNew = () => {
-    dispatch(createSession())
+    dispatch(createGame())
   }
 
   const handleDelete = (id: string) => () => {
-    dispatch(deleteSession(id))
+    dispatch(deleteGame(id))
   }
 
   return (
@@ -27,19 +27,18 @@ export const Home = () => {
       <h1>Battleship</h1>
       <NewButton onClick={handleNew}>New Game</NewButton>
 
-      {sessions.length > 0 && (
+      {games.length > 0 && (
         <>
-          <h2>Sessions</h2>
+          <h2>Games</h2>
           <List>
-            {sessions.map((s) => (
-              <Item key={s.id}>
-                <Link to={`/session/${s.id}`}>{s.id}</Link>
-                <Phase>{s.phase}</Phase>
-                <DeleteButton onClick={handleDelete(s.id)}>Delete</DeleteButton>
+            {games.map((g) => (
+              <Item key={g.session.id}>
+                <Link to={`/game/${g.session.id}`}>{g.session.id}</Link>
+                <DeleteButton onClick={handleDelete(g.session.id)}>Delete</DeleteButton>
               </Item>
             ))}
           </List>
-          <Link to="/sessions">View all →</Link>
+          <Link to="/games">View all →</Link>
         </>
       )}
     </Page>
@@ -71,11 +70,6 @@ const Item = styled.li`
   gap: 12px;
   padding: 8px 0;
   border-bottom: 1px solid #eee;
-`
-
-const Phase = styled.span`
-  color: #888;
-  font-size: 12px;
 `
 
 const DeleteButton = styled.button`

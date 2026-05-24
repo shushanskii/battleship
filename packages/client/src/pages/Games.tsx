@@ -2,47 +2,46 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import styled from 'styled-components'
-import { fetchSessions, deleteSession } from '../actions'
-import { selectSessions } from '../selectors'
+import { fetchGames, deleteGame } from '../actions'
+import { selectGames } from '../selectors'
 import type { AppDispatch } from '../store'
 
-export const Sessions = () => {
+export const Games = () => {
   const dispatch = useDispatch<AppDispatch>()
-  const sessions = useSelector(selectSessions)
+  const games = useSelector(selectGames)
 
   useEffect(() => {
-    dispatch(fetchSessions())
+    dispatch(fetchGames())
   }, [])
 
   const handleDelete = (id: string) => {
-    dispatch(deleteSession(id))
+    dispatch(deleteGame(id))
   }
 
   return (
     <Page>
       <Header>
-        <h1>Sessions</h1>
+        <h1>Games</h1>
         <Link to="/">← Home</Link>
       </Header>
 
-      {sessions.length === 0 ? (
-        <Empty>No sessions yet</Empty>
+      {games.length === 0 ? (
+        <Empty>No games yet</Empty>
       ) : (
         <Table>
           <thead>
             <tr>
               <Th>ID</Th>
-              <Th>Phase</Th>
               <Th>Created</Th>
               <Th />
             </tr>
           </thead>
           <tbody>
-            {sessions.map((s) => (
-              <tr key={s.id}>
-                <Td><Link to={`/session/${s.id}`}>{s.id}</Link></Td>
-                <Td>{new Date(s.createdAt).toLocaleString()}</Td>
-                <Td><DeleteButton onClick={() => handleDelete(s.id)}>Delete</DeleteButton></Td>
+            {games.map((g) => (
+              <tr key={g.session.id}>
+                <Td><Link to={`/game/${g.session.id}`}>{g.session.id}</Link></Td>
+                <Td>{new Date(g.session.createdAt).toLocaleString()}</Td>
+                <Td><DeleteButton onClick={() => handleDelete(g.session.id)}>Delete</DeleteButton></Td>
               </tr>
             ))}
           </tbody>

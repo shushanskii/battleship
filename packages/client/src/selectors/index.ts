@@ -1,28 +1,26 @@
 import { createSelector } from 'reselect'
-import type { Session } from '@battleship/core/session'
+import type { GameView } from '@battleship/core/game'
 import type { RootState } from '../store'
 
-const selectSessionsMap = (state: RootState) => state.sessions
+const selectGamesMap = (state: RootState) => state.games
 
-export const selectSessions = createSelector(
-  selectSessionsMap,
-  (sessions): Session[] => Object.values(sessions),
+export const selectGames = createSelector(
+  selectGamesMap,
+  (games): GameView[] => Object.values(games),
 )
 
-export const selectSession = (id: string) =>
-  createSelector(selectSessionsMap, (sessions): Session | undefined => sessions[id])
+export const selectGame = (id: string) =>
+  createSelector(selectGamesMap, (games): GameView | undefined => games[id])
 
-export const selectLastSession = createSelector(
-  selectSessions,
-  (sessions): Session | undefined => sessions[sessions.length - 1],
+export const selectLastGame = createSelector(
+  selectGames,
+  (games): GameView | undefined => games[games.length - 1],
 )
 
-export const selectCurrentSession = createSelector(
-  [
-    (state: RootState) => state.client,
-    selectSessionsMap
-  ],
-  (client, sessions) => client.currentSession ? sessions[client.currentSession] : undefined,
+export const selectCurrentGame = createSelector(
+  [(state: RootState) => state.client, selectGamesMap],
+  (client, games): GameView | undefined =>
+    client.currentGame ? games[client.currentGame] : undefined,
 )
 
 export const selectError = (state: RootState) => state.client.error

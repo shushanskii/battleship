@@ -1,12 +1,12 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 
 type ClientState = {
-  currentSession: string | null
+  currentGame: string | null
   error: string | null
 }
 
 const initialState: ClientState = {
-  currentSession: null,
+  currentGame: null,
   error: null,
 }
 
@@ -14,8 +14,8 @@ const clientSlice = createSlice({
   name: 'client',
   initialState,
   reducers: {
-    setCurrentSession: (state, { payload }: PayloadAction<string | null>) => {
-      state.currentSession = payload
+    setCurrentGame: (state, { payload }: PayloadAction<string | null>) => {
+      state.currentGame = payload
     },
     setError: (state, { payload }: PayloadAction<string>) => {
       state.error = payload
@@ -26,5 +26,5 @@ const clientSlice = createSlice({
   },
 })
 
-export const { setCurrentSession, setError, resetError } = clientSlice.actions
+export const { setCurrentGame, setError, resetError } = clientSlice.actions
 export const clientReducer = clientSlice.reducer

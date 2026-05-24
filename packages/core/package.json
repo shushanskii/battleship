@@ -9,14 +9,16 @@
     "./board": "./src/board.ts",
     "./ship": "./src/ship.ts",
     "./coords": "./src/coords.ts",
-    "./session": "./src/session.ts"
+    "./session": "./src/session.ts",
+    "./game": "./src/game.ts"
   },
   "typesVersions": {
     "*": {
       "board": ["src/board.ts"],
       "ship": ["src/ship.ts"],
       "coords": ["src/coords.ts"],
-      "session": ["src/session.ts"]
+      "session": ["src/session.ts"],
+      "game": ["src/game.ts"]
     }
   }
 }
