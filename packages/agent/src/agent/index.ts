@@ -18,8 +18,8 @@ import {
 import { InterruptType, MessageType } from "@battleship/core"
 import { ChatOpenAI } from "@langchain/openai"
 import * as z from "zod"
-import { agentShootNode, askForStrategy, askToPlace } from "./nodes/llm"
-import { defineStrategy, place } from "./tools"
+import { agentShootNode, askForStrategy, askToPlace } from "../nodes/llm"
+import { defineStrategy, place } from "../tools"
 
 export const getModel = (modelName: string, tools: any[] = [defineStrategy, place]) =>
   new ChatOpenAI({
