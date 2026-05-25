@@ -7,7 +7,6 @@ import { selectCurrentGame } from '../selectors'
 import { PlacementView } from '../components/PlacementView'
 import { Loading } from '../components/Loading'
 import type { AppDispatch } from '../store'
-import type { Board } from '@battleship/core/board'
 
 export const Game = () => {
   const { id } = useParams<{ id: string }>()
@@ -20,10 +19,6 @@ export const Game = () => {
     }
   }, [id])
 
-  const handleReady = (board: Board) => {
-    console.log('Fleet placed', board)
-  }
-
   if (!game) {
     return <Loading />
   }
@@ -33,7 +28,7 @@ export const Game = () => {
       <Link to="/">← Home</Link>
       <h1>Game</h1>
       <p>Session: {game.session.id}</p>
-      <PlacementView onReady={handleReady} />
+      <PlacementView />
     </Page>
   )
 }

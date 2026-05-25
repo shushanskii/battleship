@@ -1,9 +1,13 @@
-import * as Board from "@battleship/core/board"
-import * as Coords from "@battleship/core/coords"
-import * as Ship from "@battleship/core/ship"
-import { ShipDirection } from "@battleship/core/ship"
-import React, { useMemo, useState } from "react"
-import styled from "styled-components"
+import * as Board from '@battleship/core/board'
+import * as Coords from '@battleship/core/coords'
+import * as Ship from '@battleship/core/ship'
+import { ShipDirection } from '@battleship/core/ship'
+import React, { useMemo, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import styled from 'styled-components'
+import { placeShip } from '../actions'
+import { selectCurrentGame, selectCurrentGameBoard } from '../selectors'
+import type { AppDispatch } from '../store'
 
 const FLEET = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
 
@@ -12,55 +16,65 @@ type Props = {
 }
 
 export const PlacementView = ({ onReady }: Props) => {
-  const [board, setBoard] = useState<Board.Board>(() => Board.init())
+  const dispatch = useDispatch<AppDispatch>()
+  const game = useSelector(selectCurrentGame)
+  const boardFromStore = useSelector(selectCurrentGameBoard)
+  const board = boardFromStore ?? Board.init()
+
   const [pending, setPending] = useState<number[]>(FLEET)
   const [dragging, setDragging] = useState<{ length: number; direction: ShipDirection } | null>(null)
   const [hoverCell, setHoverCell] = useState<string | null>(null)
   const [direction, setDirection] = useState<ShipDirection>(ShipDirection.HORIZONTAL)
 
   const previewShip = useMemo(() => {
-    if (!dragging || !hoverCell) return null
+    if (!dragging || !hoverCell) { return null }
     return Ship.init(hoverCell, dragging.direction, dragging.length)
   }, [dragging, hoverCell])
 
-  const previewCells = useMemo(
-    () => (previewShip ? new Set(Ship.coords(previewShip)) : new Set<string>()),
-    [previewShip],
-  )
+  const previewCells = useMemo(() => {
+    return previewShip ? new Set(Ship.coords(previewShip)) : new Set<string>()
+  }, [previewShip])
 
-  const canPlacePreview = useMemo(
-    () => (previewShip ? Board.canPlace(board, previewShip) : false),
-    [board, previewShip],
-  )
+  const canPlacePreview = useMemo(() => {
+    return previewShip ? Board.canPlace(board, previewShip) : false
+  }, [board, previewShip])
 
-  const getCellVariant = (index: string): CellVariant => {
-    if (previewCells.has(index)) return canPlacePreview ? "preview-valid" : "preview-invalid"
-    return board.cells[index]?.status === Board.CellStatus.SHIP ? "ship" : "empty"
+  const getCellVariant = (coord: string): CellVariant => {
+    if (previewCells.has(coord)) { return canPlacePreview ? 'preview-valid' : 'preview-invalid' }
+    return board.cells[coord]?.status === Board.CellStatus.SHIP ? 'ship' : 'empty'
   }
 
   const handleDragStart = (length: number) => {
     setDragging({ length, direction })
   }
 
-  const handleDragOver = (event: React.DragEvent, index: string) => {
+  const handleDragOver = (event: React.DragEvent, coord: string) => {
     event.preventDefault()
-    setHoverCell(index)
+    setHoverCell(coord)
   }
 
-  const handleDrop = (event: React.DragEvent, index: string) => {
+  const handleDrop = (event: React.DragEvent, coord: string) => {
     event.preventDefault()
-    if (!dragging) return
-    const ship = Ship.init(index, dragging.direction, dragging.length)
-    if (!Board.canPlace(board, ship)) return
+    
+    if (!dragging) {
+      return
+    }
 
-    const nextBoard = Board.addShip(board, ship)
-    setBoard(nextBoard)
+    const ship = Ship.init(coord, dragging.direction, dragging.length)
 
-    const nextPending = pending.filter((_, idx) => idx !== pending.indexOf(dragging.length))
+    if (!Board.canPlace(board, ship)) {
+      return
+    }
+
+    if (game) {
+      dispatch(placeShip(game.session.id, ship))
+    }
+
+    const nextPending = pending.filter((_, pendingIdx) => pendingIdx !== pending.indexOf(dragging.length))
     setPending(nextPending)
 
     if (nextPending.length === 0) {
-      onReady?.(nextBoard)
+      onReady?.(Board.addShip(board, ship))
     }
 
     setDragging(null)
@@ -72,26 +86,24 @@ export const PlacementView = ({ onReady }: Props) => {
     setHoverCell(null)
   }
 
+  const handleRotate = () => {
+    setDirection((prev) => prev === ShipDirection.HORIZONTAL ? ShipDirection.VERTICAL : ShipDirection.HORIZONTAL)
+  }
+
   const { size } = board
   const cols = Array.from({ length: size }, (_, colIndex) => Coords.indexToLabel(colIndex))
 
   return (
     <Wrapper>
       <FleetPanel>
-        <RotateButton
-          onClick={() => {
-            setDirection((prev) =>
-              prev === ShipDirection.HORIZONTAL ? ShipDirection.VERTICAL : ShipDirection.HORIZONTAL,
-            )
-          }}
-        >
-          {direction === ShipDirection.HORIZONTAL ? "→ H" : "↓ V"}
+        <RotateButton onClick={handleRotate}>
+          {direction === ShipDirection.HORIZONTAL ? '→ H' : '↓ V'}
         </RotateButton>
         {pending.map((length, shipIndex) => (
           <ShipBlock
             key={shipIndex}
             draggable
-            onDragStart={() => handleDragStart(length)}
+            onDragStart={() => { handleDragStart(length) }}
             onDragEnd={handleDragEnd}
             $length={length}
             $direction={direction}
@@ -117,13 +129,13 @@ export const PlacementView = ({ onReady }: Props) => {
           <React.Fragment key={row}>
             <HeaderCell>{row}</HeaderCell>
             {cols.map((col) => {
-              const index = `${col}${row}`
+              const coord = `${col}${row}`
               return (
                 <GridCell
-                  key={index}
-                  $variant={getCellVariant(index)}
-                  onDragOver={(event) => handleDragOver(event, index)}
-                  onDrop={(event) => handleDrop(event, index)}
+                  key={coord}
+                  $variant={getCellVariant(coord)}
+                  onDragOver={(event) => { handleDragOver(event, coord) }}
+                  onDrop={(event) => { handleDrop(event, coord) }}
                 />
               )
             })}
@@ -159,10 +171,12 @@ const RotateButton = styled.button`
 
 const ShipBlock = styled.div<{ $length: number; $direction: ShipDirection }>`
   display: grid;
-  grid-template-columns: ${(props) =>
-    props.$direction === ShipDirection.HORIZONTAL ? `repeat(${props.$length}, 20px)` : "20px"};
-  grid-template-rows: ${(props) =>
-    props.$direction === ShipDirection.VERTICAL ? `repeat(${props.$length}, 20px)` : "20px"};
+  grid-template-columns: ${({ $direction, $length }) => {
+    return $direction === ShipDirection.HORIZONTAL ? `repeat(${$length}, 20px)` : '20px'
+  }};
+  grid-template-rows: ${({ $direction, $length }) => {
+    return $direction === ShipDirection.VERTICAL ? `repeat(${$length}, 20px)` : '20px'
+  }};
   gap: 1px;
   cursor: grab;
   &:active { cursor: grabbing; }
@@ -192,19 +206,19 @@ const HeaderCell = styled.div`
   height: 24px;
 `
 
-type CellVariant = "empty" | "ship" | "preview-valid" | "preview-invalid"
+type CellVariant = 'empty' | 'ship' | 'preview-valid' | 'preview-invalid'
 
 const cellBg: Record<CellVariant, string> = {
-  empty: "#e8e8e8",
-  ship: "#4a90d9",
-  "preview-valid": "#2ecc71",
-  "preview-invalid": "#e74c3c",
+  empty: '#e8e8e8',
+  ship: '#4a90d9',
+  'preview-valid': '#2ecc71',
+  'preview-invalid': '#e74c3c',
 }
 
 const GridCell = styled.div<{ $variant: CellVariant }>`
   width: 28px;
   height: 28px;
-  background: ${(props) => cellBg[props.$variant]};
+  background: ${({ $variant }) => cellBg[$variant]};
   border-radius: 3px;
 `
 

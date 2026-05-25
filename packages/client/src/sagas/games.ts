@@ -1,7 +1,8 @@
 import { call, put, takeLatest, takeEvery } from 'redux-saga/effects'
 import type { GameView } from '@battleship/core/game'
-import { GameActions, deleteGame, fetchGame, setError } from '../actions'
-import { setGame, setGames, removeGame } from '../store/games/slice'
+import type { Board } from '@battleship/core/board'
+import { GameActions, PlacementActions, deleteGame, fetchGame, placeShip, setError } from '../actions'
+import { setGame, setGames, removeGame, updateBoard } from '../store/games/slice'
 import * as api from '../api'
 
 const toErrorMessage = (error: unknown) => {
@@ -44,9 +45,19 @@ function* deleteGameSaga({ payload: id }: ReturnType<typeof deleteGame>) {
   }
 }
 
+function* placeShipSaga({ payload: { sessionId, ship } }: ReturnType<typeof placeShip>) {
+  try {
+    const board: Board = yield call(api.placeShip, sessionId, ship)
+    yield put(updateBoard({ sessionId, board }))
+  } catch (error) {
+    yield put(setError(toErrorMessage(error)))
+  }
+}
+
 export function* gamesSaga() {
   yield takeLatest(GameActions.FETCH, fetchGameSaga)
   yield takeLatest(GameActions.FETCH_ALL, fetchGamesSaga)
   yield takeLatest(GameActions.CREATE, createGameSaga)
   yield takeEvery(GameActions.DELETE, deleteGameSaga)
+  yield takeEvery(PlacementActions.PLACE_SHIP, placeShipSaga)
 }

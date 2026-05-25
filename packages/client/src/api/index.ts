@@ -1,5 +1,7 @@
 import { PLAYER_HUMAN } from '@battleship/core/session'
 import type { GameView, Shot } from '@battleship/core/game'
+import type { Ship } from '@battleship/core/ship'
+import type { Board } from '@battleship/core/board'
 
 export type { Shot, GameView }
 
@@ -43,6 +45,23 @@ export const fetchGame = async (id: string): Promise<GameView> => {
 export const deleteGame = async (id: string): Promise<void> => {
   try {
     await fetch(`${BASE}/games/${id}`, { method: 'DELETE' })
+  } catch (error) {
+    throw error instanceof Error ? error : new Error(String(error))
+  }
+}
+
+export const placeShip = async (sessionId: string, ship: Ship): Promise<Board> => {
+  try {
+    const response = await fetch(`${BASE}/games/${sessionId}/placement`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: PLAYER_HUMAN, ship }),
+    })
+    const data = await response.json()
+    if (data.error) {
+      throw new Error(data.error)
+    }
+    return data as Board
   } catch (error) {
     throw error instanceof Error ? error : new Error(String(error))
   }

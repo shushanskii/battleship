@@ -1,5 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import type { GameView } from '@battleship/core/game'
+import type { Board } from '@battleship/core/board'
 
 type GamesState = Record<string, GameView>
 
@@ -16,8 +17,13 @@ const gamesSlice = createSlice({
     removeGame: (state, { payload }: PayloadAction<string>) => {
       delete state[payload]
     },
+    updateBoard: (state, { payload }: PayloadAction<{ sessionId: string; board: Board }>) => {
+      if (state[payload.sessionId]) {
+        state[payload.sessionId].board = payload.board
+      }
+    },
   },
 })
 
-export const { setGame, setGames, removeGame } = gamesSlice.actions
+export const { setGame, setGames, removeGame, updateBoard } = gamesSlice.actions
 export const gamesReducer = gamesSlice.reducer

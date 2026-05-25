@@ -1,3 +1,5 @@
+import type { Ship } from '@battleship/core/ship'
+
 export enum ClientActions {
   GET_CURRENT_GAME = 'CLIENT:GET_CURRENT_GAME',
   SET_ERROR = 'CLIENT:SET_ERROR',
@@ -25,6 +27,10 @@ export enum GameActions {
   DELETE = 'GAMES:DELETE',
 }
 
+export enum PlacementActions {
+  PLACE_SHIP = 'PLACEMENT:PLACE_SHIP',
+}
+
 export const fetchGame = (id: string) => ({
   type: GameActions.FETCH,
   payload: id,
@@ -41,4 +47,9 @@ export const createGame = () => ({
 export const deleteGame = (id: string) => ({
   type: GameActions.DELETE,
   payload: id,
+})
+
+export const placeShip = (sessionId: string, ship: Ship) => ({
+  type: PlacementActions.PLACE_SHIP,
+  payload: { sessionId, ship },
 })

@@ -1,5 +1,6 @@
 import { createSelector } from 'reselect'
 import type { GameView } from '@battleship/core/game'
+import type { Board } from '@battleship/core/board'
 import type { RootState } from '../store'
 
 const selectGamesMap = (state: RootState) => state.games
@@ -21,6 +22,11 @@ export const selectCurrentGame = createSelector(
   [(state: RootState) => state.client, selectGamesMap],
   (client, games): GameView | undefined =>
     client.currentGame ? games[client.currentGame] : undefined,
+)
+
+export const selectCurrentGameBoard = createSelector(
+  selectCurrentGame,
+  (game): Board | null => game?.board ?? null,
 )
 
 export const selectError = (state: RootState) => state.client.error
